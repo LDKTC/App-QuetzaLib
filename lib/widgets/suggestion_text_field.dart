@@ -18,6 +18,12 @@ class SuggestionTextField extends StatefulWidget {
     this.validator,
     this.keyboardType,
     this.maxLines = 1,
+    this.overlayWidth,
+    this.onSelected,
+    this.focusNode,
+    this.autofocus = false,
+    this.textInputAction,
+    this.onSubmitted,
   });
 
   final TextEditingController controller;
@@ -28,16 +34,36 @@ class SuggestionTextField extends StatefulWidget {
   final TextInputType? keyboardType;
   final int maxLines;
 
+  /// Focus node to use instead of one this widget creates for itself —
+  /// needed by a caller that wants to move focus back to the field itself
+  /// (e.g. after committing a value elsewhere).
+  final FocusNode? focusNode;
+  final bool autofocus;
+  final TextInputAction? textInputAction;
+  final ValueChanged<String>? onSubmitted;
+
+  /// Width of the suggestions dropdown. Defaults to the screen width minus
+  /// the 16px-padded column every current call site sits in; a caller
+  /// placed somewhere narrower (a dialog) should pass its actual width.
+  final double? overlayWidth;
+
+  /// Called after [onSelected]'s default behavior (filling the field)
+  /// has already run, so a caller can react to the pick — e.g. committing
+  /// it immediately instead of waiting for the user to submit the field.
+  final ValueChanged<String>? onSelected;
+
   @override
   State<SuggestionTextField> createState() => _SuggestionTextFieldState();
 }
 
 class _SuggestionTextFieldState extends State<SuggestionTextField> {
-  final _focusNode = FocusNode();
+  FocusNode? _ownedFocusNode;
+
+  FocusNode get _focusNode => widget.focusNode ?? (_ownedFocusNode ??= FocusNode());
 
   @override
   void dispose() {
-    _focusNode.dispose();
+    _ownedFocusNode?.dispose();
     super.dispose();
   }
 
@@ -85,13 +111,18 @@ class _SuggestionTextFieldState extends State<SuggestionTextField> {
     );
   }
 
+  void _handleSelected(String selection) {
+    _select(selection);
+    widget.onSelected?.call(selection);
+  }
+
   @override
   Widget build(BuildContext context) {
     return RawAutocomplete<String>(
       textEditingController: widget.controller,
       focusNode: _focusNode,
       optionsBuilder: _optionsFor,
-      onSelected: _select,
+      onSelected: _handleSelected,
       fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
         return TextFormField(
           controller: controller,
@@ -100,6 +131,12 @@ class _SuggestionTextFieldState extends State<SuggestionTextField> {
           validator: widget.validator,
           keyboardType: widget.keyboardType,
           maxLines: widget.maxLines,
+          autofocus: widget.autofocus,
+          textInputAction: widget.textInputAction,
+          onFieldSubmitted: (value) {
+            onFieldSubmitted();
+            widget.onSubmitted?.call(value);
+          },
         );
       },
       optionsViewBuilder: (context, onSelected, options) {
@@ -111,8 +148,9 @@ class _SuggestionTextFieldState extends State<SuggestionTextField> {
             child: SizedBox(
               // Assumes the field sits in a 16px-padded column (true for
               // every current call site) — RawAutocomplete's overlay isn't
-              // otherwise told the field's actual width.
-              width: MediaQuery.sizeOf(context).width - 32,
+              // otherwise told the field's actual width. A caller placed
+              // somewhere else can override this via [overlayWidth].
+              width: widget.overlayWidth ?? MediaQuery.sizeOf(context).width - 32,
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxHeight: 200),
                 child: ListView.builder(

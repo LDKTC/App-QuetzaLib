@@ -54,7 +54,13 @@ library, stored locally on-device in SQLite.
   name it is, so the same set works for a language, a publisher's two
   spellings, or an author's pen name. Book titles are the one exception:
   they stay a single name in their own language and are always matched
-  exactly as typed.
+  exactly as typed. Building a set pulls from names already used across
+  your books instead of retyping them — every author, illustrator, series,
+  genre, language, publisher and category you've entered is offered as a
+  pick, and stays available the moment it's entered on any book. Two sets
+  can be merged into one (long-press to select, then Merge), and a set that
+  turned out to bundle unrelated names can be split back apart (the
+  scissors action on a set).
 - **Fully local**: all data lives in an on-device SQLite database
   (via `sqflite`) — nothing is synced anywhere.
 - **In-app updates**: since QuetzaLib isn't distributed through the Play
