@@ -1,70 +1,53 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
-import '../state/library_provider.dart';
+import '../widgets/category_list_view.dart';
+import '../widgets/name_alias_list_view.dart';
 
-class CategoryManagerScreen extends StatelessWidget {
+/// Hosts the two lists that organize the library by name: the categories a
+/// book can be filed under, and the name sets (`TH` / `thai` / `ไทย`) that
+/// make searching any one name find all of them.
+///
+/// The "+" action belongs to whichever tab is showing, so each tab keeps
+/// its own add flow (see `category_list_view.dart` /
+/// `name_alias_list_view.dart`) and this screen only routes to it.
+class CategoryManagerScreen extends StatefulWidget {
   const CategoryManagerScreen({super.key});
 
-  Future<void> _promptAddCategory(BuildContext context) async {
-    final controller = TextEditingController();
-    final name = await showDialog<String>(
-      context: context,
-      builder: (ctx) {
-        final t = AppLocalizations.of(ctx);
-        return AlertDialog(
-          title: Text(t.newCategoryTitle),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            decoration: InputDecoration(labelText: t.categoryNameField),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.of(ctx).pop(), child: Text(t.cancel)),
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
-              child: Text(t.add),
-            ),
-          ],
-        );
-      },
-    );
-    if (name != null && name.isNotEmpty && context.mounted) {
-      await context.read<LibraryProvider>().addCategory(name);
-    }
+  @override
+  State<CategoryManagerScreen> createState() => _CategoryManagerScreenState();
+}
+
+class _CategoryManagerScreenState extends State<CategoryManagerScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController =
+      TabController(length: 2, vsync: this)..addListener(_onTabChanged);
+
+  @override
+  void dispose() {
+    _tabController
+      ..removeListener(_onTabChanged)
+      ..dispose();
+    super.dispose();
   }
 
-  Future<void> _promptRenameCategory(BuildContext context, int id, String currentName) async {
-    final controller = TextEditingController(text: currentName);
-    final name = await showDialog<String>(
-      context: context,
-      builder: (ctx) {
-        final t = AppLocalizations.of(ctx);
-        return AlertDialog(
-          title: Text(t.renameCategoryTitle),
-          content: TextField(controller: controller, autofocus: true),
-          actions: [
-            TextButton(onPressed: () => Navigator.of(ctx).pop(), child: Text(t.cancel)),
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
-              child: Text(t.save),
-            ),
-          ],
-        );
-      },
-    );
-    if (name != null && name.isNotEmpty && context.mounted) {
-      final library = context.read<LibraryProvider>();
-      final category = library.categories.firstWhere((c) => c.id == id);
-      await library.renameCategory(category, name);
-    }
+  /// Rebuilds so the "+" action's tooltip matches the visible tab (its
+  /// `onPressed` reads the index when tapped, but the tooltip is baked in
+  /// at build time).
+  void _onTabChanged() {
+    if (!_tabController.indexIsChanging) setState(() {});
+  }
+
+  Future<void> _addForCurrentTab() {
+    return _tabController.index == 0
+        ? promptAddCategory(context)
+        : promptAddNameAliasGroup(context);
   }
 
   @override
   Widget build(BuildContext context) {
-    final library = context.watch<LibraryProvider>();
     final t = AppLocalizations.of(context);
+    final isCategoriesTab = _tabController.index == 0;
 
     return Scaffold(
       appBar: AppBar(
@@ -72,42 +55,22 @@ class CategoryManagerScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () => _promptAddCategory(context),
+            tooltip: isCategoriesTab ? t.newCategoryTitle : t.newNameSetTitle,
+            onPressed: _addForCurrentTab,
           ),
         ],
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: [
+            Tab(icon: const Icon(Icons.category_outlined), text: t.categoriesTab),
+            Tab(icon: const Icon(Icons.link), text: t.nameSetsTab),
+          ],
+        ),
       ),
-      body: library.categories.isEmpty
-          ? Center(child: Text(t.noCategoriesYet))
-          : ListView.separated(
-              itemCount: library.categories.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final category = library.categories[index];
-                final count = library.categoryCounts[category.id] ?? 0;
-                return ListTile(
-                  leading: CircleAvatar(backgroundColor: category.colorValue),
-                  title: Text(category.name),
-                  subtitle: Text(t.bookCountLabel(count.toString())),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit_outlined),
-                        onPressed: () => _promptRenameCategory(
-                          context,
-                          category.id!,
-                          category.name,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete_outline),
-                        onPressed: () => library.deleteCategory(category.id!),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
+      body: TabBarView(
+        controller: _tabController,
+        children: const [CategoryListView(), NameAliasListView()],
+      ),
     );
   }
 }

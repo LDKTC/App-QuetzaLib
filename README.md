@@ -44,7 +44,17 @@ library, stored locally on-device in SQLite.
   (a global List/Shelf and spine/cover toggle), falling back to a text
   info tile for books with no scanned cover yet.
 - **Library management**: categorize books (custom categories you define)
-  and search/filter by title, author, ISBN, or reading-status stamp.
+  and search/filter by title, author, ISBN, or reading-status stamp. Search
+  covers every "Info" field — author, illustrator, series, genre, language,
+  publisher, category — not just title/author/ISBN.
+- **Name sets (one thing, several names)**: group names that mean the same
+  thing (e.g. `TH`, `thai`, `ไทย`) under **Categories → Name sets**, and
+  searching any one of them finds every book matching any of the others. A
+  set is just a bag of equivalent words — you never declare what kind of
+  name it is, so the same set works for a language, a publisher's two
+  spellings, or an author's pen name. Book titles are the one exception:
+  they stay a single name in their own language and are always matched
+  exactly as typed.
 - **Fully local**: all data lives in an on-device SQLite database
   (via `sqflite`) — nothing is synced anywhere.
 - **In-app updates**: since QuetzaLib isn't distributed through the Play
@@ -80,8 +90,8 @@ library, stored locally on-device in SQLite.
 
 ```
 lib/
-  models/            Book, BookCategory, ReadingStamp, BookCoverPreset, BookPage,
-                      BookMetadata, AppUpdateInfo
+  models/            Book, BookCategory, NameAliasGroup, ReadingStamp,
+                      BookCoverPreset, BookPage, BookMetadata, AppUpdateInfo
   services/
     database_service.dart       sqflite schema + CRUD
     isbn_utils.dart             ISBN validation/normalization
@@ -89,6 +99,7 @@ lib/
                                  shelf display mode)
     book_metadata_service.dart  orchestrates provider lookup order
     book_lookup_service.dart    shared ISBN -> existing book/metadata/not-found resolution
+    name_alias_index.dart       expands a search term into its equivalent names
     metadata_providers/         google_books, open_library, ranobedb
     document_scanner_service.dart  cover/spine/back capture via the ML Kit document scanner
     ocr_service.dart            scan-to-fill OCR: Cloud Vision if configured, else on-device
@@ -99,7 +110,10 @@ lib/
     update_service.dart         checks GitHub Releases, downloads + installs the APK
                                  (native only; see widgets/app_update_section*.dart)
     apk_installer.dart          platform channel to the native install-APK intent
-  state/library_provider.dart   app state (ChangeNotifier) wrapping the DB
+  state/
+    library_provider.dart       app state (ChangeNotifier) wrapping the DB
+    library_grouping.dart       pure sort-group/section helpers for the list+shelf
+    library_search.dart         pure search matcher (literal + name-set expansion)
   screens/                      library list/shelf, scan, book detail/edit, cover/page
                                  scanning, ISBN entry, categories, settings
   widgets/                      shared UI pieces, incl. app_image.dart (the
