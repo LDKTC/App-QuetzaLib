@@ -2,22 +2,29 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/name_alias_group.dart';
+import 'suggestion_text_field.dart';
 
 /// Opens the editor for one set of equivalent names and returns the names
 /// the user settled on, or null if they cancelled.
 ///
 /// An empty result is a real answer, not a cancel: clearing every name in
 /// an existing set is how the caller is told to delete it.
+///
+/// [suggestions] are names already used elsewhere in the library (an
+/// author, publisher, genre...) offered as a pick instead of retyping —
+/// picking one commits it as a name straight away.
 Future<List<String>?> showNameAliasEditor(
   BuildContext context, {
   List<String> initialTerms = const [],
   bool isNew = true,
+  Set<String> suggestions = const {},
 }) {
   return showDialog<List<String>>(
     context: context,
     builder: (_) => _NameAliasEditorDialog(
       initialTerms: initialTerms,
       isNew: isNew,
+      suggestions: suggestions,
     ),
   );
 }
@@ -29,10 +36,12 @@ class _NameAliasEditorDialog extends StatefulWidget {
   const _NameAliasEditorDialog({
     required this.initialTerms,
     required this.isNew,
+    required this.suggestions,
   });
 
   final List<String> initialTerms;
   final bool isNew;
+  final Set<String> suggestions;
 
   @override
   State<_NameAliasEditorDialog> createState() => _NameAliasEditorDialogState();
@@ -65,6 +74,14 @@ class _NameAliasEditorDialogState extends State<_NameAliasEditorDialog> {
 
   void _removeTerm(String term) {
     setState(() => _terms.remove(term));
+  }
+
+  /// Names already used in the library that aren't already a chip here —
+  /// what's offered when picking instead of typing.
+  Iterable<String> get _pickableSuggestions {
+    final chosen = _terms.map(NameAliasGroup.normalize).toSet();
+    return widget.suggestions
+        .where((name) => !chosen.contains(NameAliasGroup.normalize(name)));
   }
 
   void _save() {
@@ -105,20 +122,25 @@ class _NameAliasEditorDialogState extends State<_NameAliasEditorDialog> {
               ),
             ],
             const SizedBox(height: 8),
-            TextField(
-              controller: _controller,
-              focusNode: _focusNode,
-              autofocus: true,
-              textInputAction: TextInputAction.next,
-              decoration: InputDecoration(
-                labelText: t.nameSetTermField,
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.add),
-                  tooltip: t.addNameToSetTooltip,
-                  onPressed: _commitPendingTerm,
+            LayoutBuilder(
+              builder: (context, constraints) => SuggestionTextField(
+                controller: _controller,
+                focusNode: _focusNode,
+                suggestions: _pickableSuggestions,
+                overlayWidth: constraints.maxWidth,
+                autofocus: true,
+                textInputAction: TextInputAction.next,
+                decoration: InputDecoration(
+                  labelText: t.nameSetTermField,
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.add),
+                    tooltip: t.addNameToSetTooltip,
+                    onPressed: _commitPendingTerm,
+                  ),
                 ),
+                onSelected: (_) => _commitPendingTerm(),
+                onSubmitted: (_) => _commitPendingTerm(),
               ),
-              onSubmitted: (_) => _commitPendingTerm(),
             ),
           ],
         ),

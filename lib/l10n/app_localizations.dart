@@ -221,6 +221,14 @@ class AppLocalizations {
   String get nameSetHelp => _t('nameSetHelp');
   String get noNameSetsYet => _t('noNameSetsYet');
   String nameCountLabel(String count) => _p('nameCountLabel', {'count': count});
+  String get splitNameSetTooltip => _t('splitNameSetTooltip');
+  String get splitNameSetTitle => _t('splitNameSetTitle');
+  String get splitNameSetHelp => _t('splitNameSetHelp');
+  String get splitNameSetAction => _t('splitNameSetAction');
+  String get mergeNameSetsAction => _t('mergeNameSetsAction');
+  String get cancelNameSetSelection => _t('cancelNameSetSelection');
+  String selectedCountLabel(String count) =>
+      _p('selectedCountLabel', {'count': count});
 
   // ---------------------------------------------------------------------
   // Book pages screen (book_pages_screen.dart)
@@ -515,6 +523,15 @@ const _en = <String, String>{
       'No name sets yet. Tap + to group names that mean the same thing, '
           'like TH, thai and ไทย.',
   'nameCountLabel': '{count} names',
+  'splitNameSetTooltip': 'Split into a new set',
+  'splitNameSetTitle': 'Split name set',
+  'splitNameSetHelp':
+      'Pick the names that don\'t actually belong here — they\'ll be '
+          'pulled out into a new set of their own, and the rest stay put.',
+  'splitNameSetAction': 'Split',
+  'mergeNameSetsAction': 'Merge',
+  'cancelNameSetSelection': 'Cancel selection',
+  'selectedCountLabel': '{count} selected',
 
   // Book pages screen (book_pages_screen.dart)
   'savedPagesTitle': 'Saved pages',
@@ -770,6 +787,15 @@ const _th = <String, String>{
       'ยังไม่มีชุดชื่อ แตะ + เพื่อรวมคำที่มีความหมายเดียวกันไว้ด้วยกัน '
           'เช่น TH, thai และ ไทย',
   'nameCountLabel': '{count} ชื่อ',
+  'splitNameSetTooltip': 'แยกออกเป็นชุดใหม่',
+  'splitNameSetTitle': 'แยกชุดชื่อ',
+  'splitNameSetHelp':
+      'เลือกชื่อที่จริง ๆ แล้วไม่ได้หมายถึงสิ่งเดียวกัน '
+          'ระบบจะแยกชื่อเหล่านั้นออกไปเป็นชุดใหม่ ส่วนที่เหลือยังอยู่ในชุดเดิม',
+  'splitNameSetAction': 'แยก',
+  'mergeNameSetsAction': 'รวมชุด',
+  'cancelNameSetSelection': 'ยกเลิกการเลือก',
+  'selectedCountLabel': 'เลือกแล้ว {count} รายการ',
 
   // Book pages screen (book_pages_screen.dart)
   'savedPagesTitle': 'หน้าที่บันทึกไว้',

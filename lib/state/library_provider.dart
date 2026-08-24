@@ -133,6 +133,21 @@ class LibraryProvider extends ChangeNotifier {
           if (b.language != null && b.language!.isNotEmpty) b.language!,
       };
 
+  /// Every name already sitting in the library's books — authors,
+  /// illustrators, series, genres, languages, publishers and categories —
+  /// offered as suggestions when building a name set instead of retyping
+  /// them. Always reflects the current library, so a name just entered on
+  /// a new or edited book is available here immediately.
+  Set<String> get nameSetSuggestions => {
+        ...knownAuthors,
+        ...knownIllustrators,
+        ...knownSeries,
+        ...knownGenres,
+        ...knownLanguages,
+        ...knownPublishers,
+        for (final category in _categories) category.name,
+      };
+
   /// The most recent stamp for [bookId] (by timestamp), or null if the
   /// book has no stamps yet — i.e. "not started".
   ReadingStamp? currentStampFor(int bookId) =>
@@ -492,6 +507,40 @@ class LibraryProvider extends ChangeNotifier {
 
   Future<void> deleteAliasGroup(int id) async {
     await _db.deleteNameAliasGroup(id);
+    await loadAll();
+  }
+
+  /// Combines every set in [ids] into one, keeping the first id and
+  /// deleting the rest. Fewer than two ids is a no-op.
+  Future<void> mergeAliasGroups(List<int> ids) async {
+    if (ids.length < 2) return;
+    final groups = [
+      for (final id in ids) _aliasGroups.firstWhere((group) => group.id == id),
+    ];
+    final keep = groups.first;
+    await _db.updateNameAliasGroup(
+      keep.copyWith(terms: NameAliasGroup.merged(groups)),
+    );
+    for (final group in groups.skip(1)) {
+      await _db.deleteNameAliasGroup(group.id!);
+    }
+    await loadAll();
+  }
+
+  /// Pulls [namesToExtract] out of [group] into a brand-new set of their
+  /// own — the repair for a set that turned out to bundle names that
+  /// don't actually mean the same thing. A no-op if nothing would be left
+  /// on either side.
+  Future<void> splitAliasGroup(
+    NameAliasGroup group,
+    List<String> namesToExtract,
+  ) async {
+    if (group.id == null) return;
+    final (remaining, extracted) =
+        NameAliasGroup.split(group.terms, namesToExtract);
+    if (remaining.isEmpty || extracted.isEmpty) return;
+    await _db.updateNameAliasGroup(group.copyWith(terms: remaining));
+    await _db.insertNameAliasGroup(NameAliasGroup(terms: extracted));
     await loadAll();
   }
 

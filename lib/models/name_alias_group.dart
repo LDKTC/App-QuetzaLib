@@ -49,6 +49,31 @@ class NameAliasGroup {
 
   bool get isEmpty => terms.isEmpty;
 
+  /// The term list after folding every group in [groups] into one — the
+  /// "combine these sets" action. Order follows the groups' order, and
+  /// [sanitizeTerms]'s first-spelling-wins rule decides which spelling
+  /// survives when the same name appears in more than one group.
+  static List<String> merged(Iterable<NameAliasGroup> groups) =>
+      sanitizeTerms(groups.expand((group) => group.terms));
+
+  /// Splits [terms] into what stays and what's pulled out into a brand-new
+  /// set, comparing case-insensitively — the "these two are actually
+  /// different" repair for a set that turned out to bundle unrelated
+  /// names. Every name in [namesToExtract] that isn't actually in [terms]
+  /// is ignored.
+  static (List<String> remaining, List<String> extracted) split(
+    List<String> terms,
+    Iterable<String> namesToExtract,
+  ) {
+    final extractSet = {for (final name in namesToExtract) normalize(name)};
+    final remaining = <String>[];
+    final extracted = <String>[];
+    for (final term in terms) {
+      (extractSet.contains(normalize(term)) ? extracted : remaining).add(term);
+    }
+    return (remaining, extracted);
+  }
+
   NameAliasGroup copyWith({int? id, List<String>? terms}) {
     return NameAliasGroup(
       id: id ?? this.id,
