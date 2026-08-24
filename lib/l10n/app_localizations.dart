@@ -211,6 +211,16 @@ class AppLocalizations {
   String get categoryNameField => _t('categoryNameField');
   String get renameCategoryTitle => _t('renameCategoryTitle');
   String get noCategoriesYet => _t('noCategoriesYet');
+  String get categoriesTab => _t('categoriesTab');
+  String get nameSetsTab => _t('nameSetsTab');
+  String get newNameSetTitle => _t('newNameSetTitle');
+  String get editNameSetTitle => _t('editNameSetTitle');
+  String get deleteNameSetTooltip => _t('deleteNameSetTooltip');
+  String get nameSetTermField => _t('nameSetTermField');
+  String get addNameToSetTooltip => _t('addNameToSetTooltip');
+  String get nameSetHelp => _t('nameSetHelp');
+  String get noNameSetsYet => _t('noNameSetsYet');
+  String nameCountLabel(String count) => _p('nameCountLabel', {'count': count});
 
   // ---------------------------------------------------------------------
   // Book pages screen (book_pages_screen.dart)
@@ -488,6 +498,23 @@ const _en = <String, String>{
   'categoryNameField': 'Name',
   'renameCategoryTitle': 'Rename category',
   'noCategoriesYet': 'No categories yet. Tap + to add one.',
+  'categoriesTab': 'Categories',
+  'nameSetsTab': 'Name sets',
+  'newNameSetTitle': 'New name set',
+  'editNameSetTitle': 'Edit name set',
+  'deleteNameSetTooltip': 'Delete name set',
+  'nameSetTermField': 'Add a name',
+  'addNameToSetTooltip': 'Add this name to the set',
+  'nameSetHelp':
+      'Names in one set all mean the same thing — e.g. TH, thai, ไทย. '
+          'Searching any one of them finds every book whose author, '
+          'illustrator, series, genre, language, publisher or category '
+          'matches any other name in the set. Book titles are always '
+          'matched exactly as typed.',
+  'noNameSetsYet':
+      'No name sets yet. Tap + to group names that mean the same thing, '
+          'like TH, thai and ไทย.',
+  'nameCountLabel': '{count} names',
 
   // Book pages screen (book_pages_screen.dart)
   'savedPagesTitle': 'Saved pages',
@@ -727,6 +754,22 @@ const _th = <String, String>{
   'categoryNameField': 'ชื่อ',
   'renameCategoryTitle': 'เปลี่ยนชื่อหมวดหมู่',
   'noCategoriesYet': 'ยังไม่มีหมวดหมู่ แตะ + เพื่อเพิ่ม',
+  'categoriesTab': 'หมวดหมู่',
+  'nameSetsTab': 'ชุดชื่อ',
+  'newNameSetTitle': 'ชุดชื่อใหม่',
+  'editNameSetTitle': 'แก้ไขชุดชื่อ',
+  'deleteNameSetTooltip': 'ลบชุดชื่อ',
+  'nameSetTermField': 'เพิ่มชื่อ',
+  'addNameToSetTooltip': 'เพิ่มชื่อนี้เข้าชุด',
+  'nameSetHelp':
+      'ชื่อที่อยู่ในชุดเดียวกันหมายถึงสิ่งเดียวกัน เช่น TH, thai, ไทย '
+          'เมื่อค้นหาชื่อใดชื่อหนึ่ง จะแสดงหนังสือทุกเล่มที่มีผู้เขียน '
+          'นักวาด ซีรีส์ ประเภท ภาษา สำนักพิมพ์ หรือหมวดหมู่ '
+          'ตรงกับชื่ออื่นในชุดเดียวกัน ส่วนชื่อหนังสือจะค้นหาตามที่พิมพ์เท่านั้น',
+  'noNameSetsYet':
+      'ยังไม่มีชุดชื่อ แตะ + เพื่อรวมคำที่มีความหมายเดียวกันไว้ด้วยกัน '
+          'เช่น TH, thai และ ไทย',
+  'nameCountLabel': '{count} ชื่อ',
 
   // Book pages screen (book_pages_screen.dart)
   'savedPagesTitle': 'หน้าที่บันทึกไว้',

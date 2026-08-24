@@ -9,6 +9,7 @@ import '../models/book.dart';
 import '../models/book_page.dart';
 import '../models/category.dart';
 import '../models/cover_preset.dart';
+import '../models/name_alias_group.dart';
 import '../models/stamp.dart';
 
 /// Singleton wrapper around the app's local sqflite database.
@@ -23,7 +24,7 @@ class DatabaseService {
   static final DatabaseService instance = DatabaseService._internal();
 
   static const _dbName = 'quetzalib.db';
-  static const _dbVersion = 7;
+  static const _dbVersion = 8;
 
   Database? _db;
 
@@ -88,6 +89,7 @@ class DatabaseService {
 
         await _createStatusScanTables(db);
         await _createLocalImagesTable(db);
+        await _createNameAliasTable(db);
 
         for (final name in const [
           'Fiction',
@@ -117,6 +119,9 @@ class DatabaseService {
         if (oldVersion < 7) {
           await _createLocalImagesTable(db);
         }
+        if (oldVersion < 8) {
+          await _createNameAliasTable(db);
+        }
       },
     );
   }
@@ -133,6 +138,21 @@ class DatabaseService {
         path TEXT PRIMARY KEY,
         bytes BLOB NOT NULL,
         createdAt TEXT NOT NULL
+      )
+    ''');
+  }
+
+  /// Creates the `name_alias_groups` store: one row per set of names that
+  /// all mean the same thing (e.g. `TH|thai|ไทย`), used by the library
+  /// search to expand a query into its equivalents. Terms live in a single
+  /// `|`-joined column the same way [Book]'s authors do — sets are few and
+  /// are always read in full to build the in-memory search index, so
+  /// there's nothing a second table would buy here.
+  Future<void> _createNameAliasTable(DatabaseExecutor db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS name_alias_groups (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        terms TEXT NOT NULL
       )
     ''');
   }
@@ -389,6 +409,36 @@ class DatabaseService {
       map.putIfAbsent(bookId, () => []).add(categoryId);
     }
     return map;
+  }
+
+  // ---------------------------------------------------------------------
+  // Name alias groups
+  // ---------------------------------------------------------------------
+
+  Future<int> insertNameAliasGroup(NameAliasGroup group) async {
+    final db = await database;
+    return db.insert('name_alias_groups', group.toMap());
+  }
+
+  Future<int> updateNameAliasGroup(NameAliasGroup group) async {
+    final db = await database;
+    return db.update(
+      'name_alias_groups',
+      group.toMap(),
+      where: 'id = ?',
+      whereArgs: [group.id],
+    );
+  }
+
+  Future<int> deleteNameAliasGroup(int id) async {
+    final db = await database;
+    return db.delete('name_alias_groups', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<List<NameAliasGroup>> getAllNameAliasGroups() async {
+    final db = await database;
+    final rows = await db.query('name_alias_groups', orderBy: 'id');
+    return rows.map(NameAliasGroup.fromMap).toList();
   }
 
   // ---------------------------------------------------------------------

@@ -5,10 +5,13 @@ import '../models/book.dart';
 import '../models/book_page.dart';
 import '../models/category.dart';
 import '../models/cover_preset.dart';
+import '../models/name_alias_group.dart';
 import '../models/stamp.dart';
 import '../services/database_service.dart';
 import '../services/image_storage_service.dart';
+import '../services/name_alias_index.dart';
 import '../services/settings_service.dart';
+import 'library_search.dart';
 
 enum CategoryFilter { all }
 
@@ -51,7 +54,10 @@ class LibraryProvider extends ChangeNotifier {
   List<Book> _books = [];
   List<BookCategory> _categories = [];
   Map<int, List<int>> _bookCategoryLinks = {};
+  Map<int, List<String>> _categoryNamesByBookId = {};
   Map<int, String?> _primaryCategoryByBookId = {};
+  List<NameAliasGroup> _aliasGroups = [];
+  NameAliasIndex _aliasIndex = NameAliasIndex.empty;
   Map<int, List<ReadingStamp>> _stampsByBook = {};
   Map<int, List<BookCoverPreset>> _coverPresetsByBook = {};
   Map<int, List<BookPage>> _pagesByBook = {};
@@ -65,6 +71,14 @@ class LibraryProvider extends ChangeNotifier {
   bool _loading = false;
 
   List<BookCategory> get categories => List.unmodifiable(_categories);
+
+  /// The user's name-alias sets (e.g. `TH` / `thai` / `ไทย`), managed on
+  /// the categories screen and applied by [filteredBooks].
+  List<NameAliasGroup> get aliasGroups => List.unmodifiable(_aliasGroups);
+
+  /// [aliasGroups] in the form the search matcher uses.
+  NameAliasIndex get aliasIndex => _aliasIndex;
+
   String get searchQuery => _searchQuery;
   LibraryStatusFilter? get statusFilter => _statusFilter;
   int? get categoryFilterId => _categoryFilterId;
@@ -76,6 +90,10 @@ class LibraryProvider extends ChangeNotifier {
 
   List<int> categoryIdsFor(int bookId) =>
       List.unmodifiable(_bookCategoryLinks[bookId] ?? const []);
+
+  /// The names of [bookId]'s linked categories, alphabetically ordered.
+  List<String> categoryNamesFor(int bookId) =>
+      List.unmodifiable(_categoryNamesByBookId[bookId] ?? const []);
 
   Book? getById(int id) {
     for (final book in _books) {
@@ -189,12 +207,14 @@ class LibraryProvider extends ChangeNotifier {
         final ids = _bookCategoryLinks[book.id] ?? const [];
         if (!ids.contains(_categoryFilterId)) return false;
       }
-      if (_searchQuery.isNotEmpty) {
-        final q = _searchQuery.toLowerCase();
-        final haystack =
-            '${book.title} ${book.authorsDisplay} ${book.isbn13 ?? ''}'
-                .toLowerCase();
-        if (!haystack.contains(q)) return false;
+      if (_searchQuery.trim().isNotEmpty) {
+        final matches = bookMatchesQuery(
+          book,
+          _searchQuery,
+          aliasIndex: _aliasIndex,
+          categoryNames: _categoryNamesByBookId[book.id] ?? const [],
+        );
+        if (!matches) return false;
       }
       return true;
     }).toList();
@@ -288,7 +308,13 @@ class LibraryProvider extends ChangeNotifier {
     _books = await _db.getAllBooks();
     _categories = await _db.getAllCategories();
     _bookCategoryLinks = await _db.getAllBookCategoryLinks();
-    _primaryCategoryByBookId = _computePrimaryCategoryByBookId();
+    _categoryNamesByBookId = _computeCategoryNamesByBookId();
+    _primaryCategoryByBookId = {
+      for (final entry in _categoryNamesByBookId.entries)
+        entry.key: entry.value.isEmpty ? null : entry.value.first,
+    };
+    _aliasGroups = await _db.getAllNameAliasGroups();
+    _aliasIndex = NameAliasIndex(_aliasGroups);
     _stampsByBook = _groupByBookId(await _db.getAllStamps(), (s) => s.bookId);
     _coverPresetsByBook = _groupByBookId(
       await _db.getAllCoverPresets(),
@@ -305,22 +331,22 @@ class LibraryProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// The category name used to break sort ties by category (see
-  /// [_compareSecondaryFields]): a book can have several categories, so
-  /// each book is keyed by the alphabetically-first one of its linked
-  /// category names, or null if it has none.
-  Map<int, String?> _computePrimaryCategoryByBookId() {
+  /// Every book's linked category names, alphabetically ordered — read by
+  /// the search matcher (a category name is one of the fields a name-alias
+  /// set can stand in for) and by the sort tie-breaker, which uses the
+  /// first name of each list as the book's "primary" category (see
+  /// [_compareSecondaryFields]).
+  Map<int, List<String>> _computeCategoryNamesByBookId() {
     final categoryNameById = {
       for (final category in _categories) category.id!: category.name,
     };
-    final result = <int, String?>{};
+    final result = <int, List<String>>{};
     for (final entry in _bookCategoryLinks.entries) {
-      final names = entry.value
+      result[entry.key] = entry.value
           .map((id) => categoryNameById[id])
           .whereType<String>()
           .toList()
         ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-      result[entry.key] = names.isEmpty ? null : names.first;
     }
     return result;
   }
@@ -431,6 +457,41 @@ class LibraryProvider extends ChangeNotifier {
   Future<void> deleteCategory(int id) async {
     await _db.deleteCategory(id);
     if (_categoryFilterId == id) _categoryFilterId = null;
+    await loadAll();
+  }
+
+  // ---------------------------------------------------------------------
+  // Name alias groups
+  // ---------------------------------------------------------------------
+
+  /// Saves a new set of equivalent names. [terms] is sanitized first
+  /// (trimmed, de-duplicated case-insensitively); a set that ends up empty
+  /// isn't saved at all and returns null.
+  Future<int?> addAliasGroup(Iterable<String> terms) async {
+    final sanitized = NameAliasGroup.sanitizeTerms(terms);
+    if (sanitized.isEmpty) return null;
+    final id = await _db.insertNameAliasGroup(NameAliasGroup(terms: sanitized));
+    await loadAll();
+    return id;
+  }
+
+  /// Replaces [group]'s names with [terms]. Clearing every name deletes
+  /// the set rather than leaving an empty one behind.
+  Future<void> updateAliasGroup(
+    NameAliasGroup group,
+    Iterable<String> terms,
+  ) async {
+    final sanitized = NameAliasGroup.sanitizeTerms(terms);
+    if (sanitized.isEmpty) {
+      if (group.id != null) await deleteAliasGroup(group.id!);
+      return;
+    }
+    await _db.updateNameAliasGroup(group.copyWith(terms: sanitized));
+    await loadAll();
+  }
+
+  Future<void> deleteAliasGroup(int id) async {
+    await _db.deleteNameAliasGroup(id);
     await loadAll();
   }
 
