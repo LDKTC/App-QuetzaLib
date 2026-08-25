@@ -63,6 +63,11 @@ library, stored locally on-device in SQLite.
   scissors action on a set).
 - **Fully local**: all data lives in an on-device SQLite database
   (via `sqflite`) — nothing is synced anywhere.
+- **Backup & restore**: **Settings → Backup & restore** exports the whole
+  library — books, categories, reading history, cover/spine/page photos,
+  and name sets — into a single `.zip` file you can save anywhere and
+  import back later, on this device or another one. Importing replaces
+  everything currently in the app.
 - **In-app updates**: since QuetzaLib isn't distributed through the Play
   Store, **Settings → App update** checks GitHub Releases for a newer
   build and installs it over the existing app — see [App updates](#app-updates)
@@ -91,6 +96,8 @@ library, stored locally on-device in SQLite.
   the optional Cloud Vision OCR call
 - `package_info_plus` + `path_provider` for the in-app updater (current
   version check, downloaded-APK staging)
+- `archive` + `file_picker` for backup export/import (bundling the library
+  into a `.zip`, then saving/picking it cross-platform)
 
 ## Project layout
 
@@ -116,6 +123,9 @@ lib/
     update_service.dart         checks GitHub Releases, downloads + installs the APK
                                  (native only; see widgets/app_update_section*.dart)
     apk_installer.dart          platform channel to the native install-APK intent
+    backup_service.dart         exports/imports the whole library + its local
+                                 photos as a single .zip (see widgets/
+                                 backup_restore_section.dart)
   state/
     library_provider.dart       app state (ChangeNotifier) wrapping the DB
     library_grouping.dart       pure sort-group/section helpers for the list+shelf

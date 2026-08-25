@@ -557,6 +557,86 @@ class DatabaseService {
   }
 
   // ---------------------------------------------------------------------
+  // Backup restore
+  // ---------------------------------------------------------------------
+
+  /// Wipes every table and repopulates them from a decoded backup archive
+  /// (see [BackupService]), preserving each row's original id so the
+  /// bookId/categoryId foreign keys recorded in the backup still line up.
+  ///
+  /// Deleting `books`/`categories` cascades away `book_categories`,
+  /// `reading_stamps`, `book_cover_presets` and `book_pages` for free (see
+  /// their `ON DELETE CASCADE` foreign keys in [_createStatusScanTables]),
+  /// so only those two top-level deletes plus `name_alias_groups` (which
+  /// has no foreign key) are needed before the restore inserts run.
+  Future<void> replaceAllData({
+    required List<Book> books,
+    required List<BookCategory> categories,
+    required List<Map<String, Object?>> bookCategoryLinks,
+    required List<NameAliasGroup> aliasGroups,
+    required List<ReadingStamp> stamps,
+    required List<BookCoverPreset> coverPresets,
+    required List<BookPage> pages,
+  }) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete('books');
+      await txn.delete('categories');
+      await txn.delete('name_alias_groups');
+
+      for (final category in categories) {
+        await txn.insert(
+          'categories',
+          category.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+      for (final book in books) {
+        await txn.insert(
+          'books',
+          book.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+      for (final link in bookCategoryLinks) {
+        await txn.insert(
+          'book_categories',
+          link,
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+      for (final group in aliasGroups) {
+        await txn.insert(
+          'name_alias_groups',
+          group.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+      for (final stamp in stamps) {
+        await txn.insert(
+          'reading_stamps',
+          stamp.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+      for (final preset in coverPresets) {
+        await txn.insert(
+          'book_cover_presets',
+          preset.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+      for (final page in pages) {
+        await txn.insert(
+          'book_pages',
+          page.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    });
+  }
+
+  // ---------------------------------------------------------------------
   // Local images (web's file-less stand-in for ImageStorageService)
   // ---------------------------------------------------------------------
 

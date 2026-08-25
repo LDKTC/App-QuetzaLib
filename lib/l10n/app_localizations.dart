@@ -178,6 +178,19 @@ class AppLocalizations {
   String get checkForUpdates => _t('checkForUpdates');
   String get downloadAndInstall => _t('downloadAndInstall');
   String downloading(String percent) => _p('downloading', {'percent': percent});
+  String get backupSectionTitle => _t('backupSectionTitle');
+  String get backupSectionBody => _t('backupSectionBody');
+  String get exportBackup => _t('exportBackup');
+  String get importBackup => _t('importBackup');
+  String get backupExported => _t('backupExported');
+  String backupExportFailed(String error) =>
+      _p('backupExportFailed', {'error': error});
+  String get importBackupTitle => _t('importBackupTitle');
+  String get importBackupConfirm => _t('importBackupConfirm');
+  String backupImported(String count) => _p('backupImported', {'count': count});
+  String backupImportFailed(String error) =>
+      _p('backupImportFailed', {'error': error});
+  String get invalidBackupFile => _t('invalidBackupFile');
   String upToDate(String version) => _p('upToDate', {'version': version});
   String updateAvailable(String version) =>
       _p('updateAvailable', {'version': version});
@@ -485,6 +498,25 @@ const _en = <String, String>{
   'couldNotCheckForUpdates': 'Could not check for updates: {error}',
   'updateFailed': 'Update failed: {error}',
   'currentVersion': 'Current version: {version}',
+  'backupSectionTitle': 'Backup & restore',
+  'backupSectionBody':
+      'Export your whole library -- books, categories, reading history, '
+          'cover/spine/page photos, and name sets -- into a single .zip file '
+          'you can save anywhere, then import it back on this device or '
+          'another one. Importing replaces everything currently in the app.',
+  'exportBackup': 'Export backup',
+  'importBackup': 'Import backup',
+  'backupExported': 'Backup saved.',
+  'backupExportFailed': 'Could not export backup: {error}',
+  'importBackupTitle': 'Import backup?',
+  'importBackupConfirm':
+      'This replaces your entire current library -- books, categories, '
+          'reading history, and photos -- with the contents of this backup. '
+          'This can\'t be undone.',
+  'backupImported': 'Imported {count} books.',
+  'backupImportFailed': 'Could not import backup: {error}',
+  'invalidBackupFile':
+      'This file doesn\'t look like a QuetzaLib backup.',
 
   // Language names
   'localeSystemDefault': 'System default',
@@ -752,6 +784,24 @@ const _th = <String, String>{
   'couldNotCheckForUpdates': 'ตรวจสอบการอัปเดตไม่สำเร็จ: {error}',
   'updateFailed': 'อัปเดตไม่สำเร็จ: {error}',
   'currentVersion': 'เวอร์ชันปัจจุบัน: {version}',
+  'backupSectionTitle': 'สำรองข้อมูลและกู้คืน',
+  'backupSectionBody':
+      'ส่งออกคลังหนังสือทั้งหมดของคุณ — หนังสือ หมวดหมู่ ประวัติการอ่าน '
+          'รูปปกหน้า/สัน/หน้ากระดาษ และชุดชื่อที่เทียบเท่ากัน — เป็นไฟล์ .zip '
+          'ไฟล์เดียวที่บันทึกเก็บไว้ที่ไหนก็ได้ แล้วนำเข้ากลับมาในอุปกรณ์นี้หรืออุปกรณ์อื่นภายหลัง '
+          'การนำเข้าจะแทนที่ข้อมูลทั้งหมดที่มีอยู่ในแอปตอนนี้',
+  'exportBackup': 'ส่งออกข้อมูลสำรอง',
+  'importBackup': 'นำเข้าข้อมูลสำรอง',
+  'backupExported': 'บันทึกข้อมูลสำรองแล้ว',
+  'backupExportFailed': 'ส่งออกข้อมูลสำรองไม่สำเร็จ: {error}',
+  'importBackupTitle': 'นำเข้าข้อมูลสำรองหรือไม่?',
+  'importBackupConfirm':
+      'การทำเช่นนี้จะแทนที่คลังหนังสือปัจจุบันทั้งหมดของคุณ — หนังสือ หมวดหมู่ '
+          'ประวัติการอ่าน และรูปภาพ — ด้วยข้อมูลในไฟล์สำรองนี้ '
+          'ไม่สามารถย้อนกลับได้',
+  'backupImported': 'นำเข้าหนังสือแล้ว {count} เล่ม',
+  'backupImportFailed': 'นำเข้าข้อมูลสำรองไม่สำเร็จ: {error}',
+  'invalidBackupFile': 'ไฟล์นี้ไม่ใช่ไฟล์สำรองข้อมูลของ QuetzaLib',
 
   // Language names
   'localeSystemDefault': 'ค่าเริ่มต้นของระบบ',

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -25,6 +26,36 @@ String _extensionOf(String filename) {
   final dot = filename.lastIndexOf('.');
   if (dot == -1 || dot == filename.length - 1) return '.jpg';
   return filename.substring(dot).toLowerCase();
+}
+
+/// Writes [bytes] straight to a local file, the same way [saveLocalImage]
+/// does for a picker [XFile] -- used to restore a cover/page photo from a
+/// backup archive, where the image only exists as raw bytes.
+Future<String> saveLocalImageBytes(
+  Uint8List bytes,
+  String subfolder,
+  int bookId,
+  String extension,
+) async {
+  final docsDir = await getApplicationDocumentsDirectory();
+  final targetDir = Directory('${docsDir.path}/$subfolder');
+  if (!await targetDir.exists()) {
+    await targetDir.create(recursive: true);
+  }
+  final filename =
+      '${bookId}_${DateTime.now().microsecondsSinceEpoch}$extension';
+  final targetPath = '${targetDir.path}/$filename';
+  await File(targetPath).writeAsBytes(bytes);
+  return targetPath;
+}
+
+/// Reads a locally-saved file's bytes back, or null if [path] is a remote
+/// URL or no longer exists on disk -- used when exporting a backup archive.
+Future<Uint8List?> readLocalImageBytes(String path) async {
+  if (isRemoteImagePath(path)) return null;
+  final file = File(path);
+  if (!await file.exists()) return null;
+  return file.readAsBytes();
 }
 
 /// Deletes a locally-saved file. A no-op for `null` and for remote paths,
