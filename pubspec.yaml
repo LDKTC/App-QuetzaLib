@@ -45,6 +45,11 @@ dependencies:
   package_info_plus: ^8.0.0
   path_provider: ^2.1.0
 
+  # Database backup/restore: bundles the library + its local cover/page
+  # photos into a single .zip file the user can export/import.
+  archive: ^3.6.1
+  file_picker: ^8.1.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

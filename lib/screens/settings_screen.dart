@@ -5,6 +5,7 @@ import '../l10n/app_localizations.dart';
 import '../services/settings_service.dart';
 import '../state/library_provider.dart';
 import '../widgets/app_update_section.dart';
+import '../widgets/backup_restore_section.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -109,6 +110,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onPressed: _saveVisionApiKey,
                   child: Text(t.save),
                 ),
+                const Divider(height: 40),
+                const BackupRestoreSection(),
                 const Divider(height: 40),
                 const AppUpdateSection(),
               ],

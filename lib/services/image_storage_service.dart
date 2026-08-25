@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:image_picker/image_picker.dart';
 
 import 'local_image_platform.dart';
@@ -22,4 +24,20 @@ class ImageStorageService {
       saveLocalImage(file, 'pages', bookId);
 
   Future<void> deleteFile(String? path) => deleteLocalImage(path);
+
+  /// Restores a cover/page photo from raw bytes (a backup archive entry)
+  /// into a fresh local file/blob, the same way [saveCoverImage]/
+  /// [savePageImage] do for a freshly-captured [XFile].
+  Future<String> saveImportedImage(
+    Uint8List bytes,
+    String subfolder,
+    int bookId,
+    String extension,
+  ) =>
+      saveLocalImageBytes(bytes, subfolder, bookId, extension);
+
+  /// Reads a previously-saved local image's bytes back, or null if [path]
+  /// is a remote URL or no longer exists -- used to embed cover/page
+  /// photos into an exported backup archive.
+  Future<Uint8List?> readBytes(String path) => readLocalImageBytes(path);
 }
