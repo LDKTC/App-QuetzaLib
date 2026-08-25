@@ -93,65 +93,73 @@ class _NameAliasEditorDialogState extends State<_NameAliasEditorDialog> {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    return AlertDialog(
-      title: Text(widget.isNew ? t.newNameSetTitle : t.editNameSetTitle),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              t.nameSetHelp,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+    return GestureDetector(
+      // The suggestions dropdown stays open (and can cover the Save
+      // button) until the field loses focus, which otherwise only
+      // happens by tapping another focusable widget. This lets a tap
+      // anywhere else in the dialog close it too.
+      behavior: HitTestBehavior.opaque,
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: AlertDialog(
+        title: Text(widget.isNew ? t.newNameSetTitle : t.editNameSetTitle),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                t.nameSetHelp,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
-            ),
-            if (_terms.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 6,
-                runSpacing: 4,
-                children: [
-                  for (final term in _terms)
-                    InputChip(
-                      label: Text(term),
-                      visualDensity: VisualDensity.compact,
-                      onDeleted: () => _removeTerm(term),
+              if (_terms.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: [
+                    for (final term in _terms)
+                      InputChip(
+                        label: Text(term),
+                        visualDensity: VisualDensity.compact,
+                        onDeleted: () => _removeTerm(term),
+                      ),
+                  ],
+                ),
+              ],
+              const SizedBox(height: 8),
+              LayoutBuilder(
+                builder: (context, constraints) => SuggestionTextField(
+                  controller: _controller,
+                  focusNode: _focusNode,
+                  suggestions: _pickableSuggestions,
+                  overlayWidth: constraints.maxWidth,
+                  autofocus: true,
+                  textInputAction: TextInputAction.next,
+                  decoration: InputDecoration(
+                    labelText: t.nameSetTermField,
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.add),
+                      tooltip: t.addNameToSetTooltip,
+                      onPressed: _commitPendingTerm,
                     ),
-                ],
+                  ),
+                  onSelected: (_) => _commitPendingTerm(),
+                  onSubmitted: (_) => _commitPendingTerm(),
+                ),
               ),
             ],
-            const SizedBox(height: 8),
-            LayoutBuilder(
-              builder: (context, constraints) => SuggestionTextField(
-                controller: _controller,
-                focusNode: _focusNode,
-                suggestions: _pickableSuggestions,
-                overlayWidth: constraints.maxWidth,
-                autofocus: true,
-                textInputAction: TextInputAction.next,
-                decoration: InputDecoration(
-                  labelText: t.nameSetTermField,
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.add),
-                    tooltip: t.addNameToSetTooltip,
-                    onPressed: _commitPendingTerm,
-                  ),
-                ),
-                onSelected: (_) => _commitPendingTerm(),
-                onSubmitted: (_) => _commitPendingTerm(),
-              ),
-            ),
-          ],
+          ),
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(t.cancel),
+          ),
+          TextButton(onPressed: _save, child: Text(t.save)),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(t.cancel),
-        ),
-        TextButton(onPressed: _save, child: Text(t.save)),
-      ],
     );
   }
 }
