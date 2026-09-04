@@ -60,6 +60,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
               padding: const EdgeInsets.only(bottom: 32),
               children: [
                 SettingsSection(
+                  title: t.themeSectionTitle,
+                  icon: Icons.palette_rounded,
+                  children: [
+                    Text(
+                      t.themeSectionBody,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 16),
+                    SegmentedButton<AppThemeMode>(
+                      segments: [
+                        for (final mode in AppThemeMode.values)
+                          ButtonSegment(
+                            value: mode,
+                            label: Text(mode.label(t)),
+                          ),
+                      ],
+                      selected: {library.appThemeMode},
+                      onSelectionChanged: (selected) =>
+                          library.setAppThemeMode(selected.first),
+                    ),
+                  ],
+                ),
+                SettingsSection(
                   title: t.languageSectionTitle,
                   icon: Icons.translate_rounded,
                   children: [

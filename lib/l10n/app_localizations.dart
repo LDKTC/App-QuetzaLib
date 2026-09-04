@@ -175,6 +175,11 @@ class AppLocalizations {
   String get cloudVisionKeyField => _t('cloudVisionKeyField');
   String get languageSectionTitle => _t('languageSectionTitle');
   String get languageSectionBody => _t('languageSectionBody');
+  String get themeSectionTitle => _t('themeSectionTitle');
+  String get themeSectionBody => _t('themeSectionBody');
+  String get themeModeSystem => _t('themeModeSystem');
+  String get themeModeLight => _t('themeModeLight');
+  String get themeModeDark => _t('themeModeDark');
   String get appUpdateSectionTitle => _t('appUpdateSectionTitle');
   String get appUpdateSectionBody => _t('appUpdateSectionBody');
   String get checkForUpdates => _t('checkForUpdates');
@@ -495,6 +500,12 @@ const _en = <String, String>{
   'languageSectionBody':
       'Choose the app\'s display language, or follow your device\'s system '
           'language.',
+  'themeSectionTitle': 'Appearance',
+  'themeSectionBody':
+      'Read in light or dark, or follow whatever your device is set to.',
+  'themeModeSystem': 'System default',
+  'themeModeLight': 'Light',
+  'themeModeDark': 'Dark',
   'appUpdateSectionTitle': 'App update',
   'appUpdateSectionBody':
       'QuetzaLib isn\'t distributed through the Play Store, so updates are '
@@ -798,6 +809,11 @@ const _th = <String, String>{
   'cloudVisionKeyField': 'คีย์ Cloud Vision API (ไม่บังคับ)',
   'languageSectionTitle': 'ภาษา',
   'languageSectionBody': 'เลือกภาษาที่แสดงในแอป หรือใช้ตามภาษาระบบของอุปกรณ์',
+  'themeSectionTitle': 'ธีมและการแสดงผล',
+  'themeSectionBody': 'เลือกอ่านแบบธีมสว่างหรือธีมมืด หรือใช้ตามการตั้งค่าของอุปกรณ์',
+  'themeModeSystem': 'ตามระบบ',
+  'themeModeLight': 'สว่าง',
+  'themeModeDark': 'มืด',
   'appUpdateSectionTitle': 'การอัปเดตแอป',
   'appUpdateSectionBody':
       'QuetzaLib ไม่ได้เผยแพร่ผ่าน Play Store การอัปเดตจึงติดตั้งด้วยวิธีเดียวกับการติดตั้งครั้งแรก '

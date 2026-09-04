@@ -1,7 +1,39 @@
-import 'package:flutter/widgets.dart' show Locale;
+import 'package:flutter/material.dart' show Locale, ThemeMode;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../l10n/app_localizations.dart';
+
+/// Which theme the app renders in. [system] follows the device's dark-mode
+/// setting; the other two pin the app to one brightness regardless of it —
+/// a reading app is often used in bed with the phone still in light mode,
+/// so following the device isn't always what the reader wants.
+enum AppThemeMode {
+  system,
+  light,
+  dark;
+
+  String get storageValue => name;
+
+  String label(AppLocalizations t) => switch (this) {
+        AppThemeMode.system => t.themeModeSystem,
+        AppThemeMode.light => t.themeModeLight,
+        AppThemeMode.dark => t.themeModeDark,
+      };
+
+  /// The [ThemeMode] to hand [MaterialApp].
+  ThemeMode get themeMode => switch (this) {
+        AppThemeMode.system => ThemeMode.system,
+        AppThemeMode.light => ThemeMode.light,
+        AppThemeMode.dark => ThemeMode.dark,
+      };
+
+  static AppThemeMode fromStorage(String? value) {
+    return AppThemeMode.values.firstWhere(
+      (m) => m.storageValue == value,
+      orElse: () => AppThemeMode.system,
+    );
+  }
+}
 
 /// The app's display language. [system] follows the device's locale
 /// (falling back to English if the device locale isn't supported); the
@@ -121,8 +153,9 @@ enum LibrarySortField {
   }
 }
 
-/// Persists user-configurable app settings: the optional Cloud Vision API
-/// key used for OCR text scanning, and the library view mode.
+/// Persists user-configurable app settings: the display language and theme,
+/// the optional Cloud Vision API key used for OCR text scanning, and the
+/// library view mode.
 class SettingsService {
   SettingsService._internal();
   static final SettingsService instance = SettingsService._internal();
@@ -131,6 +164,7 @@ class SettingsService {
   static const _keyLibrarySortField = 'library_sort_field';
   static const _keyCloudVisionApiKey = 'cloud_vision_api_key';
   static const _keyAppLocale = 'app_locale';
+  static const _keyAppThemeMode = 'app_theme_mode';
 
   Future<AppLocale> getAppLocale() async {
     final prefs = await SharedPreferences.getInstance();
@@ -140,6 +174,16 @@ class SettingsService {
   Future<void> setAppLocale(AppLocale locale) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyAppLocale, locale.storageValue);
+  }
+
+  Future<AppThemeMode> getAppThemeMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    return AppThemeMode.fromStorage(prefs.getString(_keyAppThemeMode));
+  }
+
+  Future<void> setAppThemeMode(AppThemeMode mode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyAppThemeMode, mode.storageValue);
   }
 
   /// Google Cloud Vision API key used for OCR text scanning (title, author,

@@ -24,7 +24,7 @@ class QuetzaLibApp extends StatelessWidget {
             title: 'QuetzaLib',
             theme: buildAppTheme(Brightness.light),
             darkTheme: buildAppTheme(Brightness.dark),
-            themeMode: ThemeMode.system,
+            themeMode: library.appThemeMode.themeMode,
             locale: library.appLocale.locale,
             supportedLocales: AppLocalizations.supportedLocales,
             localizationsDelegates: const [
