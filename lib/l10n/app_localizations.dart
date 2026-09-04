@@ -176,8 +176,14 @@ class AppLocalizations {
   String get appUpdateSectionTitle => _t('appUpdateSectionTitle');
   String get appUpdateSectionBody => _t('appUpdateSectionBody');
   String get checkForUpdates => _t('checkForUpdates');
-  String get downloadAndInstall => _t('downloadAndInstall');
+  String get downloadUpdate => _t('downloadUpdate');
+  String get downloadAgain => _t('downloadAgain');
+  String get installUpdate => _t('installUpdate');
+  String get installing => _t('installing');
   String downloading(String percent) => _p('downloading', {'percent': percent});
+  String readyToInstall(String version) =>
+      _p('readyToInstall', {'version': version});
+  String get downloadedFileMissing => _t('downloadedFileMissing');
   String get backupSectionTitle => _t('backupSectionTitle');
   String get backupSectionBody => _t('backupSectionBody');
   String get exportBackup => _t('exportBackup');
@@ -196,7 +202,9 @@ class AppLocalizations {
       _p('updateAvailable', {'version': version});
   String couldNotCheckForUpdates(String error) =>
       _p('couldNotCheckForUpdates', {'error': error});
-  String updateFailed(String error) => _p('updateFailed', {'error': error});
+  String downloadFailed(String error) =>
+      _p('downloadFailed', {'error': error});
+  String installFailed(String error) => _p('installFailed', {'error': error});
   String currentVersion(String version) =>
       _p('currentVersion', {'version': version});
 
@@ -489,14 +497,27 @@ const _en = <String, String>{
       'QuetzaLib isn\'t distributed through the Play Store, so updates are '
           'installed the same way as the first install: downloading the '
           'latest APK and installing it over this app. Your books and '
-          'settings are kept.',
+          'settings are kept. Downloading and installing are separate '
+          'steps, so an install that doesn\'t go through can be retried '
+          'without downloading the APK again.',
   'checkForUpdates': 'Check for updates',
-  'downloadAndInstall': 'Download & install',
+  'downloadUpdate': 'Download update',
+  'downloadAgain': 'Download again',
+  'installUpdate': 'Install',
+  'installing': 'Installing…',
   'downloading': 'Downloading… {percent}%',
+  'readyToInstall':
+      'v{version} is downloaded and ready to install. If the install '
+          'doesn\'t go through, you can retry it without downloading '
+          'again.',
+  'downloadedFileMissing':
+      'The downloaded update is no longer on this device. Download it '
+          'again.',
   'upToDate': "You're up to date (v{version}).",
   'updateAvailable': 'Update available: v{version}',
   'couldNotCheckForUpdates': 'Could not check for updates: {error}',
-  'updateFailed': 'Update failed: {error}',
+  'downloadFailed': 'Download failed: {error}',
+  'installFailed': 'Install failed: {error}',
   'currentVersion': 'Current version: {version}',
   'backupSectionTitle': 'Backup & restore',
   'backupSectionBody':
@@ -775,14 +796,25 @@ const _th = <String, String>{
   'appUpdateSectionTitle': 'การอัปเดตแอป',
   'appUpdateSectionBody':
       'QuetzaLib ไม่ได้เผยแพร่ผ่าน Play Store การอัปเดตจึงติดตั้งด้วยวิธีเดียวกับการติดตั้งครั้งแรก '
-          'คือดาวน์โหลด APK ล่าสุดแล้วติดตั้งทับแอปเดิม หนังสือและการตั้งค่าของคุณจะยังคงอยู่',
+          'คือดาวน์โหลด APK ล่าสุดแล้วติดตั้งทับแอปเดิม หนังสือและการตั้งค่าของคุณจะยังคงอยู่ '
+          'การดาวน์โหลดและการติดตั้งแยกเป็นคนละขั้นตอน หากติดตั้งไม่สำเร็จจึงลองติดตั้งใหม่ได้ '
+          'โดยไม่ต้องดาวน์โหลด APK ซ้ำ',
   'checkForUpdates': 'ตรวจสอบการอัปเดต',
-  'downloadAndInstall': 'ดาวน์โหลดและติดตั้ง',
+  'downloadUpdate': 'ดาวน์โหลดอัปเดต',
+  'downloadAgain': 'ดาวน์โหลดใหม่',
+  'installUpdate': 'ติดตั้ง',
+  'installing': 'กำลังติดตั้ง…',
   'downloading': 'กำลังดาวน์โหลด… {percent}%',
+  'readyToInstall':
+      'ดาวน์โหลด v{version} เสร็จแล้ว พร้อมติดตั้ง '
+          'หากติดตั้งไม่สำเร็จ สามารถลองติดตั้งใหม่ได้โดยไม่ต้องดาวน์โหลดซ้ำ',
+  'downloadedFileMissing':
+      'ไฟล์อัปเดตที่ดาวน์โหลดไว้ไม่อยู่ในอุปกรณ์นี้แล้ว กรุณาดาวน์โหลดใหม่',
   'upToDate': 'คุณใช้เวอร์ชันล่าสุดแล้ว (v{version})',
   'updateAvailable': 'มีอัปเดตใหม่: v{version}',
   'couldNotCheckForUpdates': 'ตรวจสอบการอัปเดตไม่สำเร็จ: {error}',
-  'updateFailed': 'อัปเดตไม่สำเร็จ: {error}',
+  'downloadFailed': 'ดาวน์โหลดไม่สำเร็จ: {error}',
+  'installFailed': 'ติดตั้งไม่สำเร็จ: {error}',
   'currentVersion': 'เวอร์ชันปัจจุบัน: {version}',
   'backupSectionTitle': 'สำรองข้อมูลและกู้คืน',
   'backupSectionBody':
