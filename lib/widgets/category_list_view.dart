@@ -31,8 +31,19 @@ class CategoryListView extends StatelessWidget {
       itemBuilder: (context, index) {
         final category = library.categories[index];
         final count = library.categoryCounts[category.id] ?? 0;
+        final colorScheme = Theme.of(context).colorScheme;
         return ListTile(
-          leading: CircleAvatar(backgroundColor: category.colorValue),
+          // The avatar carries the category's initial rather than being a
+          // bare colored dot: it tells you which category you're looking at
+          // while scanning, and it stays on-palette in both themes.
+          leading: CircleAvatar(
+            backgroundColor: colorScheme.secondaryContainer,
+            foregroundColor: colorScheme.onSecondaryContainer,
+            child: Text(
+              _initialOf(category.name),
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
           title: Text(category.name),
           subtitle: Text(t.bookCountLabel(count.toString())),
           trailing: Row(
@@ -55,6 +66,13 @@ class CategoryListView extends StatelessWidget {
       },
     );
   }
+}
+
+/// The single character shown in a category's avatar — its first
+/// non-whitespace character, or a bullet for a name that has none.
+String _initialOf(String name) {
+  final trimmed = name.trim();
+  return trimmed.isEmpty ? '\u2022' : trimmed.characters.first.toUpperCase();
 }
 
 /// Asks for a name and adds a category. Called both from this tab and from

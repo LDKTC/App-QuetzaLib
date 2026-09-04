@@ -5,6 +5,7 @@ import '../l10n/app_localizations.dart';
 import '../models/book.dart';
 import '../models/cover_preset.dart';
 import '../state/library_provider.dart';
+import '../theme.dart';
 import '../widgets/app_image.dart';
 import '../widgets/book_3d_cover.dart';
 import '../widgets/full_image_viewer.dart';
@@ -82,22 +83,32 @@ class BookDetailScreen extends StatelessWidget {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                width: 96,
-                height: 140,
-                child: _CoverArt(book: book, activePreset: activePreset),
+              Container(
+                width: 104,
+                height: 152,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppRadius.cover),
+                  boxShadow: coverShadow(context),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadius.cover),
+                  child: _CoverArt(book: book, activePreset: activePreset),
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(book.title, style: Theme.of(context).textTheme.titleLarge),
+                    Text(
+                      book.title,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
                     if (book.series != null) ...[
                       const SizedBox(height: 2),
                       Text(
@@ -110,8 +121,13 @@ class BookDetailScreen extends StatelessWidget {
                             ),
                       ),
                     ],
-                    const SizedBox(height: 4),
-                    Text(book.authorsDisplay, style: Theme.of(context).textTheme.bodyMedium),
+                    const SizedBox(height: 6),
+                    Text(
+                      book.authorsDisplay,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
+                    ),
                     if (book.illustrators.isNotEmpty) ...[
                       const SizedBox(height: 4),
                       Text(
@@ -146,7 +162,7 @@ class BookDetailScreen extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           OutlinedButton.icon(
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => CoverPresetsScreen(book: book)),
@@ -154,112 +170,77 @@ class BookDetailScreen extends StatelessWidget {
             icon: const Icon(Icons.camera_alt_outlined, size: 18),
             label: Text(activePreset == null ? t.scanCoverLabel : t.manageCoversLabel),
           ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(t.readingStatusLabel, style: Theme.of(context).textTheme.labelLarge),
-              StatusChip(currentType: library.currentStampFor(bookId)?.type),
-            ],
+          _Section(
+            title: t.readingStatusLabel,
+            trailing: StatusChip(currentType: library.currentStampFor(bookId)?.type),
+            child: StampTimeline(bookId: bookId),
           ),
-          const SizedBox(height: 8),
-          StampTimeline(bookId: bookId),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(t.categoriesLabel, style: Theme.of(context).textTheme.labelLarge),
-              IconButton(
-                icon: const Icon(Icons.add_circle_outline),
-                tooltip: t.editCategoriesTooltip,
-                visualDensity: VisualDensity.compact,
-                onPressed: () => _pickCategories(context, bookId, categoryIds),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          if (categories.isEmpty)
-            Text(
-              t.noCategoriesAssignedHint,
-              style: Theme.of(context).textTheme.bodySmall,
-            )
-          else
-            Wrap(
-              spacing: 8,
-              children: [for (final c in categories) Chip(label: Text(c.name))],
+          _Section(
+            title: t.categoriesLabel,
+            trailing: IconButton(
+              icon: const Icon(Icons.add_circle_outline),
+              tooltip: t.editCategoriesTooltip,
+              visualDensity: VisualDensity.compact,
+              onPressed: () => _pickCategories(context, bookId, categoryIds),
             ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(t.savedPagesLabel, style: Theme.of(context).textTheme.labelLarge),
-              if (pages.isNotEmpty)
-                TextButton(
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => BookPagesScreen(book: book)),
+            child: categories.isEmpty
+                ? Text(
+                    t.noCategoriesAssignedHint,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  )
+                : Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final c in categories) Chip(label: Text(c.name)),
+                    ],
                   ),
-                  child: Text(t.viewAllLabel),
-                ),
-            ],
           ),
-          const SizedBox(height: 8),
-          if (pages.isEmpty)
-            OutlinedButton.icon(
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => PageScanScreen(book: book)),
-              ),
-              icon: const Icon(Icons.add_a_photo_outlined, size: 18),
-              label: Text(t.savePageTitle),
-            )
-          else
-            SizedBox(
-              height: 96,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: pages.length + 1,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (context, index) {
-                  if (index == pages.length) {
-                    return _AddPageTile(book: book);
-                  }
-                  final page = pages[index];
-                  return InkWell(
-                    onTap: () =>
-                        showFullImagePreview(context, page.imagePath),
-                    borderRadius: BorderRadius.circular(6),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: AppImage(
-                        page.imagePath,
-                        width: 72,
-                        height: 96,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          width: 72,
-                          height: 96,
-                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                          child: const Icon(Icons.broken_image_outlined),
-                        ),
-                      ),
+          _Section(
+            title: t.savedPagesLabel,
+            trailing: pages.isEmpty
+                ? null
+                : TextButton(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => BookPagesScreen(book: book)),
                     ),
-                  );
-                },
-              ),
+                    child: Text(t.viewAllLabel),
+                  ),
+            child: pages.isEmpty
+                ? OutlinedButton.icon(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => PageScanScreen(book: book)),
+                    ),
+                    icon: const Icon(Icons.add_a_photo_outlined, size: 18),
+                    label: Text(t.savePageTitle),
+                  )
+                : SizedBox(
+                    height: 96,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: pages.length + 1,
+                      separatorBuilder: (_, __) => const SizedBox(width: 10),
+                      itemBuilder: (context, index) {
+                        if (index == pages.length) {
+                          return _AddPageTile(book: book);
+                        }
+                        return _PageThumbnail(imagePath: pages[index].imagePath);
+                      },
+                    ),
+                  ),
+          ),
+          if (book.description != null)
+            _Section(
+              title: t.descriptionLabel,
+              child: Text(book.description!),
             ),
-          if (book.description != null) ...[
-            const SizedBox(height: 20),
-            Text(t.descriptionLabel, style: Theme.of(context).textTheme.labelLarge),
-            const SizedBox(height: 8),
-            Text(book.description!),
-          ],
-          if (book.notes != null) ...[
-            const SizedBox(height: 20),
-            Text(t.myNotesLabel, style: Theme.of(context).textTheme.labelLarge),
-            const SizedBox(height: 8),
-            Text(book.notes!),
-          ],
+          if (book.notes != null)
+            _Section(
+              title: t.myNotesLabel,
+              child: Text(book.notes!),
+            ),
           if (book.source != null) ...[
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             Text(
               t.sourceLabel(book.source!),
               style: Theme.of(context).textTheme.bodySmall,
@@ -436,6 +417,98 @@ class _CoverArt extends StatelessWidget {
   }
 }
 
+/// One block of the detail screen — a labeled card with an optional
+/// trailing action. Every section below the header uses it, so the reading
+/// timeline, categories, saved pages, description, and notes share the same
+/// header weight, padding, and separation instead of each being a bare
+/// label followed by an ad-hoc gap.
+class _Section extends StatelessWidget {
+  const _Section({required this.title, required this.child, this.trailing});
+
+  final String title;
+  final Widget child;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: 20),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: 32,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          letterSpacing: 0.4,
+                        ),
+                      ),
+                    ),
+                    if (trailing != null) trailing!,
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              child,
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// One saved page in the detail screen's horizontal strip.
+class _PageThumbnail extends StatelessWidget {
+  const _PageThumbnail({required this.imagePath});
+
+  final String imagePath;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final radius = BorderRadius.circular(AppRadius.cover);
+    return InkWell(
+      onTap: () => showFullImagePreview(context, imagePath),
+      borderRadius: radius,
+      child: Container(
+        width: 72,
+        height: 96,
+        decoration: BoxDecoration(
+          borderRadius: radius,
+          boxShadow: coverShadow(context),
+        ),
+        child: ClipRRect(
+          borderRadius: radius,
+          child: AppImage(
+            imagePath,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => ColoredBox(
+              color: colorScheme.surfaceContainerHighest,
+              child: Icon(
+                Icons.broken_image_outlined,
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The "add another page" slot at the end of the saved-pages strip: an
+/// outlined, tinted tile so it reads as an empty slot rather than as one
+/// more saved page.
 class _AddPageTile extends StatelessWidget {
   const _AddPageTile({required this.book});
 
@@ -443,19 +516,23 @@ class _AddPageTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final radius = BorderRadius.circular(AppRadius.cover);
     return InkWell(
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => PageScanScreen(book: book)),
       ),
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: radius,
       child: Container(
         width: 72,
         height: 96,
+        alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(6),
+          color: colorScheme.primaryContainer.withValues(alpha: 0.35),
+          border: Border.all(color: colorScheme.outlineVariant),
+          borderRadius: radius,
         ),
-        child: const Icon(Icons.add_a_photo_outlined),
+        child: Icon(Icons.add_a_photo_outlined, color: colorScheme.primary),
       ),
     );
   }

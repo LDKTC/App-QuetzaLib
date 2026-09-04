@@ -56,15 +56,15 @@ class _StampTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (color, icon, label) =
-        stampVisuals(AppLocalizations.of(context), stamp.type);
+    final t = AppLocalizations.of(context);
+    final colors = stampColors(context, stamp.type);
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: CircleAvatar(
-        backgroundColor: color.withValues(alpha: 0.12),
-        child: Icon(icon, color: color, size: 20),
+        backgroundColor: colors.container,
+        child: Icon(stampIcon(stamp.type), color: colors.foreground, size: 20),
       ),
-      title: Text(label),
+      title: Text(stampLabel(t, stamp.type)),
       subtitle: Text(
         [formatStampTimestamp(stamp.timestamp), if (stamp.note != null) stamp.note!]
             .join(' · '),
@@ -92,7 +92,7 @@ class _StampTile extends StatelessWidget {
   Future<void> _confirmDelete(BuildContext context, ReadingStamp stamp) async {
     final library = context.read<LibraryProvider>();
     final t = AppLocalizations.of(context);
-    final (_, _, statusLabel) = stampVisuals(t, stamp.type);
+    final statusLabel = stampLabel(t, stamp.type);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -212,7 +212,7 @@ class _StampEditorDialogState extends State<_StampEditorDialog> {
               children: [
                 for (final type in StampType.values)
                   ChoiceChip(
-                    label: Text(stampVisuals(t, type).$3),
+                    label: Text(stampLabel(t, type)),
                     selected: _type == type,
                     onSelected: (_) => setState(() => _type = type),
                   ),
