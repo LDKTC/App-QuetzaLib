@@ -13,7 +13,19 @@ abstract final class AppRadius {
   static const double cover = 8;
 
   /// Cards, sheets, and other surfaces that group content.
-  static const double surface = 16;
+  static const double surface = 18;
+
+  /// Text fields and other input surfaces.
+  static const double field = 14;
+
+  /// Chips and small inline badges — softly rounded rather than fully
+  /// pill-shaped, so a row of them reads as a set of tags instead of a
+  /// row of buttons.
+  static const double chip = 10;
+
+  /// Rows and small square-ish tiles: list tiles, the leading icon block
+  /// of a tile, and menu surfaces.
+  static const double tile = 12;
 
   /// Buttons and other pill-shaped controls.
   static const double pill = 999;
@@ -189,17 +201,21 @@ ThemeData buildAppTheme(Brightness brightness) {
     scaffoldBackgroundColor: colorScheme.surface,
     textTheme: textTheme,
 
-    // The app bar sits directly on top of list/grid content on every
-    // screen, so it stays flush with the surface until content scrolls
-    // under it — then a tinted, lightly elevated bar separates the two.
+    // The app bar stays flush with the content underneath it — no tint or
+    // shadow on scroll. What separates the bar from the list is the title's
+    // weight, not a line: screen titles are set a step larger and bolder
+    // than a section title so the hierarchy is carried by type.
     appBarTheme: AppBarThemeData(
       backgroundColor: colorScheme.surface,
       foregroundColor: colorScheme.onSurface,
-      surfaceTintColor: colorScheme.surfaceTint,
+      surfaceTintColor: Colors.transparent,
       elevation: 0,
-      scrolledUnderElevation: 3,
+      scrolledUnderElevation: 0,
       centerTitle: false,
-      titleTextStyle: textTheme.titleLarge,
+      titleTextStyle: textTheme.titleLarge?.copyWith(
+        fontSize: 22,
+        fontWeight: FontWeight.w700,
+      ),
     ),
 
     navigationBarTheme: NavigationBarThemeData(
@@ -217,14 +233,19 @@ ThemeData buildAppTheme(Brightness brightness) {
       }),
     ),
 
+    // Cards separate themselves from the page by their fill, not by an
+    // outline: a screen made of stacked cards reads as soft blocks rather
+    // than as a stack of framed boxes. `Clip.antiAlias` means a card can
+    // hold an image, an `InkWell` ripple, or a divider right up to its own
+    // rounded edge without any of them squaring off the corner.
     cardTheme: CardThemeData(
       color: colorScheme.surfaceContainerLow,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.surface),
-        side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.6)),
       ),
     ),
 
@@ -236,23 +257,25 @@ ThemeData buildAppTheme(Brightness brightness) {
       isDense: true,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.field),
         borderSide: BorderSide.none,
       ),
+      // No border at rest — the fill alone says "this is a field". The
+      // focus and error rings stay, since those carry state a fill can't.
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: colorScheme.outlineVariant),
+        borderRadius: BorderRadius.circular(AppRadius.field),
+        borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.field),
         borderSide: BorderSide(color: colorScheme.primary, width: 2),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.field),
         borderSide: BorderSide(color: colorScheme.error),
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.field),
         borderSide: BorderSide(color: colorScheme.error, width: 2),
       ),
       labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
@@ -282,7 +305,7 @@ ThemeData buildAppTheme(Brightness brightness) {
       backgroundColor: colorScheme.surfaceContainerHighest,
       labelStyle: textTheme.labelLarge,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.pill),
+        borderRadius: BorderRadius.circular(AppRadius.chip),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
     ),
@@ -310,7 +333,9 @@ ThemeData buildAppTheme(Brightness brightness) {
       color: colorScheme.surfaceContainerHigh,
       surfaceTintColor: Colors.transparent,
       elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.tile),
+      ),
       textStyle: textTheme.bodyMedium,
     ),
 
@@ -320,16 +345,20 @@ ThemeData buildAppTheme(Brightness brightness) {
       contentTextStyle: textTheme.bodyMedium?.copyWith(
         color: colorScheme.onInverseSurface,
       ),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.tile),
+      ),
     ),
 
     listTileTheme: ListTileThemeData(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       titleTextStyle: textTheme.titleSmall,
       subtitleTextStyle: textTheme.bodySmall?.copyWith(
         color: colorScheme.onSurfaceVariant,
       ),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.tile),
+      ),
     ),
 
     dividerTheme: DividerThemeData(

@@ -77,7 +77,6 @@ class AppLocalizations {
   String get openSearch => _t('openSearch');
   String get closeSearch => _t('closeSearch');
   String get filterAll => _t('filterAll');
-  String get emptyLibrary => _t('emptyLibrary');
   String get noBooksYet => _t('noBooksYet');
   String get scanIsbnBarcode => _t('scanIsbnBarcode');
   String get enterIsbnNumber => _t('enterIsbnNumber');
@@ -91,6 +90,9 @@ class AppLocalizations {
   String get noSeriesGroupLabel => _t('noSeriesGroupLabel');
   String get noLanguageGenreGroupLabel => _t('noLanguageGenreGroupLabel');
   String bookCountLabel(String count) => _p('bookCountLabel', {'count': count});
+  String pagesLabel(String count) => _p('pagesLabel', {'count': count});
+  String get addBookLabel => _t('addBookLabel');
+  String get emptyLibraryHint => _t('emptyLibraryHint');
   String get expandSectionTooltip => _t('expandSectionTooltip');
   String get collapseSectionTooltip => _t('collapseSectionTooltip');
 
@@ -397,8 +399,6 @@ const _en = <String, String>{
   'openSearch': 'Search',
   'closeSearch': 'Close search',
   'filterAll': 'All',
-  'emptyLibrary':
-      'No books yet. Scan a barcode or add one manually to get started.',
   'noBooksYet': 'No books yet.',
   'scanIsbnBarcode': 'Scan ISBN barcode',
   'enterIsbnNumber': 'Enter ISBN number',
@@ -412,6 +412,9 @@ const _en = <String, String>{
   'noSeriesGroupLabel': 'No series',
   'noLanguageGenreGroupLabel': 'No language/genre',
   'bookCountLabel': '{count} books',
+  'pagesLabel': '{count} pages',
+  'addBookLabel': 'Add book',
+  'emptyLibraryHint': 'Scan a barcode or add one manually to get started.',
   'expandSectionTooltip': 'Expand section',
   'collapseSectionTooltip': 'Collapse section',
 
@@ -710,7 +713,6 @@ const _th = <String, String>{
   'openSearch': 'ค้นหา',
   'closeSearch': 'ปิดการค้นหา',
   'filterAll': 'ทั้งหมด',
-  'emptyLibrary': 'ยังไม่มีหนังสือ สแกนบาร์โค้ดหรือเพิ่มด้วยตนเองเพื่อเริ่มต้น',
   'noBooksYet': 'ยังไม่มีหนังสือ',
   'scanIsbnBarcode': 'สแกนบาร์โค้ด ISBN',
   'enterIsbnNumber': 'กรอกหมายเลข ISBN',
@@ -724,6 +726,9 @@ const _th = <String, String>{
   'noSeriesGroupLabel': 'ไม่มีซีรีย์',
   'noLanguageGenreGroupLabel': 'ไม่มีภาษา/ประเภท',
   'bookCountLabel': '{count} เล่ม',
+  'pagesLabel': '{count} หน้า',
+  'addBookLabel': 'เพิ่มหนังสือ',
+  'emptyLibraryHint': 'สแกนบาร์โค้ดหรือเพิ่มด้วยตนเองเพื่อเริ่มต้น',
   'expandSectionTooltip': 'ขยายส่วน',
   'collapseSectionTooltip': 'ย่อส่วน',
 

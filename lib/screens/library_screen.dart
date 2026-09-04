@@ -9,6 +9,7 @@ import '../state/library_provider.dart';
 import '../theme.dart';
 import '../widgets/book_list_tile.dart';
 import '../widgets/book_preview_sheet.dart';
+import '../widgets/empty_state.dart';
 import '../widgets/section_header.dart';
 import '../widgets/shelf_grid_view.dart';
 import 'book_detail_screen.dart';
@@ -19,9 +20,9 @@ import 'scan_screen.dart';
 
 extension on LibraryViewMode {
   IconData get icon => switch (this) {
-        LibraryViewMode.list => Icons.view_list_outlined,
-        LibraryViewMode.shelfCover => Icons.grid_view_outlined,
-        LibraryViewMode.shelfSpine => Icons.menu_book_outlined,
+        LibraryViewMode.list => Icons.view_list_rounded,
+        LibraryViewMode.shelfCover => Icons.grid_view_rounded,
+        LibraryViewMode.shelfSpine => Icons.menu_book_rounded,
       };
 }
 
@@ -90,7 +91,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 Text(mode.label(t)),
                 if (mode == library.viewMode) ...[
                   const Spacer(),
-                  const Icon(Icons.check, size: 18),
+                  const Icon(Icons.check_rounded, size: 18),
                 ],
               ],
             ),
@@ -113,7 +114,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
         title: Text(t.myLibrary),
         actions: [
           IconButton(
-            icon: Icon(_searchExpanded ? Icons.search_off : Icons.search),
+            icon: Icon(
+              _searchExpanded ? Icons.search_off_rounded : Icons.search_rounded,
+            ),
             tooltip: _searchExpanded ? t.closeSearch : t.openSearch,
             onPressed: () => _toggleSearch(library),
           ),
@@ -139,9 +142,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       focusNode: _searchFocusNode,
                       decoration: InputDecoration(
                         hintText: t.searchHint,
-                        prefixIcon: const Icon(Icons.search),
+                        prefixIcon: const Icon(Icons.search_rounded),
                         suffixIcon: IconButton(
-                          icon: const Icon(Icons.qr_code_scanner),
+                          icon: const Icon(Icons.qr_code_scanner_rounded),
                           tooltip: t.scanToSearch,
                           onPressed: () => Navigator.of(context).push(
                             MaterialPageRoute(
@@ -164,7 +167,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
               child: Row(
                 children: [
                   _SelectButton<LibraryStatusFilter?>(
-                    icon: Icons.filter_list,
+                    icon: Icons.filter_list_rounded,
                     tooltip: t.filterStatusLabel,
                     value: library.statusFilter,
                     isActive: library.statusFilter != null,
@@ -185,7 +188,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   ),
                   const SizedBox(width: 8),
                   _SelectButton<LibrarySortField>(
-                    icon: Icons.sort,
+                    icon: Icons.sort_rounded,
                     tooltip: t.sortByLabel,
                     value: library.sortField,
                     onChanged: (field) {
@@ -199,7 +202,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   if (library.categories.isNotEmpty) ...[
                     const SizedBox(width: 8),
                     _SelectButton<int?>(
-                      icon: Icons.category_outlined,
+                      icon: Icons.category_rounded,
                       tooltip: t.filterCategoryLabel,
                       value: library.categoryFilterId,
                       isActive: library.categoryFilterId != null,
@@ -303,7 +306,7 @@ class _SelectButton<T> extends StatelessWidget {
           border: isActive
               ? null
               : Border.all(color: colorScheme.outlineVariant),
-          borderRadius: BorderRadius.circular(AppRadius.pill),
+          borderRadius: BorderRadius.circular(AppRadius.tile),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -314,8 +317,12 @@ class _SelectButton<T> extends StatelessWidget {
               child: DropdownButton<T>(
                 value: value,
                 isDense: true,
-                borderRadius: BorderRadius.circular(12),
-                icon: Icon(Icons.arrow_drop_down, size: 18, color: foreground),
+                borderRadius: BorderRadius.circular(AppRadius.tile),
+                icon: Icon(
+                  Icons.arrow_drop_down_rounded,
+                  size: 18,
+                  color: foreground,
+                ),
                 style: theme.textTheme.labelLarge?.copyWith(
                   color: colorScheme.onSurface,
                 ),
@@ -342,14 +349,19 @@ class _SelectButton<T> extends StatelessWidget {
   }
 }
 
-/// One row in the sorted/grouped library list: either a book, a section
-/// header (the date or series it was grouped under), or a plain divider
-/// between two consecutive books in the same section.
+/// One row in the sorted/grouped library list: either a book or the
+/// section header (the date or series it was grouped under) that opens a
+/// run of them.
 sealed class _LibraryRow {}
 
 class _HeaderRow extends _LibraryRow {
-  _HeaderRow(this.label);
+  _HeaderRow(this.label, this.count);
   final String label;
+
+  /// How many books the header opens, shown as its badge. Counted up as
+  /// the rows are built, since a group's size isn't known until the group
+  /// key changes again.
+  int count;
 }
 
 class _BookRow extends _LibraryRow {
@@ -357,25 +369,26 @@ class _BookRow extends _LibraryRow {
   final Book book;
 }
 
-class _DividerRow extends _LibraryRow {}
-
-/// Turns the already-sorted [books] into header/book/divider rows: a
-/// header is inserted whenever the group key changes, a divider between
-/// two consecutive books in the same (or no) group — mirroring what
-/// `ListView.separated`'s plain `Divider` used to do before grouping.
+/// Turns the already-sorted [books] into header/book rows: a header is
+/// inserted whenever the group key changes, carrying the size of the group
+/// it opens. Books no longer need a divider row between them — each is its
+/// own card, so the gap does the separating.
 List<_LibraryRow> _buildLibraryRows(
   List<Book> books,
   LibrarySortField sortField,
   AppLocalizations t,
 ) {
   final rows = <_LibraryRow>[];
+  _HeaderRow? currentHeader;
   String? lastHeader;
   for (final book in books) {
     final header = groupHeaderFor(book, sortField, t);
-    if (header != null && header != lastHeader) {
-      rows.add(_HeaderRow(header));
-    } else if (rows.isNotEmpty && rows.last is _BookRow) {
-      rows.add(_DividerRow());
+    if (header != null) {
+      if (header != lastHeader) {
+        currentHeader = _HeaderRow(header, 0);
+        rows.add(currentHeader);
+      }
+      currentHeader!.count++;
     }
     rows.add(_BookRow(book));
     lastHeader = header;
@@ -401,28 +414,33 @@ class _BookListView extends StatelessWidget {
     final t = AppLocalizations.of(context);
     final rows = _buildLibraryRows(books, sortField, t);
     return ListView.builder(
+      // Clears the extended action button, so the last book can still be
+      // tapped once the list is scrolled to the bottom.
+      padding: const EdgeInsets.only(top: 4, bottom: 96),
       itemCount: rows.length,
       itemBuilder: (context, index) {
         final row = rows[index];
         return switch (row) {
-          _HeaderRow(:final label) => SectionHeader(label: label),
-          // Inset to line up with the title column, so the covers read as
-          // one continuous column rather than being sliced by full-width
-          // rules.
-          _DividerRow() => const Divider(height: 1, indent: 76, endIndent: 16),
-          _BookRow(:final book) => BookListTile(
-              book: book,
-              coverImagePath:
-                  library.activeCoverPresetFor(book.id!)?.frontImagePath,
-              currentStatus: library.currentStampFor(book.id!)?.type,
-              onTap: () => onTapBook(book.id!),
-              onLongPress: () => showBookPreview(
-                context,
+          _HeaderRow(:final label, :final count) => SectionHeader(
+              label: label,
+              count: count,
+            ),
+          _BookRow(:final book) => Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: BookListTile(
                 book: book,
                 coverImagePath:
                     library.activeCoverPresetFor(book.id!)?.frontImagePath,
                 currentStatus: library.currentStampFor(book.id!)?.type,
-                onOpenDetails: () => onTapBook(book.id!),
+                onTap: () => onTapBook(book.id!),
+                onLongPress: () => showBookPreview(
+                  context,
+                  book: book,
+                  coverImagePath:
+                      library.activeCoverPresetFor(book.id!)?.frontImagePath,
+                  currentStatus: library.currentStampFor(book.id!)?.type,
+                  onOpenDetails: () => onTapBook(book.id!),
+                ),
               ),
             ),
         };
@@ -431,54 +449,25 @@ class _BookListView extends StatelessWidget {
   }
 }
 
-/// The library with nothing in it: an illustration, the explanation, and
-/// the primary way out — the empty state is the first screen a new user
-/// sees, so it offers the scan flow rather than leaving them to find the
-/// floating action button.
+/// The library with nothing in it: the shared empty state, pointed at the
+/// scan flow — the first screen a new user sees, so it offers the way in
+/// rather than leaving them to find the floating action button.
 class _EmptyState extends StatelessWidget {
   const _EmptyState();
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final t = AppLocalizations.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 104,
-              height: 104,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: theme.colorScheme.secondaryContainer,
-              ),
-              child: Icon(
-                Icons.auto_stories,
-                size: 48,
-                color: theme.colorScheme.onSecondaryContainer,
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              t.emptyLibrary,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const ScanScreen()),
-              ),
-              icon: const Icon(Icons.qr_code_scanner, size: 18),
-              label: Text(t.scanIsbnBarcode),
-            ),
-          ],
+    return EmptyState(
+      icon: Icons.auto_stories_rounded,
+      title: t.noBooksYet,
+      message: t.emptyLibraryHint,
+      action: FilledButton.icon(
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const ScanScreen()),
         ),
+        icon: const Icon(Icons.qr_code_scanner_rounded, size: 18),
+        label: Text(t.scanIsbnBarcode),
       ),
     );
   }
@@ -490,35 +479,37 @@ class _AddBookMenu extends StatelessWidget {
     final t = AppLocalizations.of(context);
     return MenuAnchor(
       builder: (context, controller, child) {
-        return FloatingActionButton(
-          onPressed: () => controller.isOpen ? controller.close() : controller.open(),
-          child: const Icon(Icons.add),
+        return FloatingActionButton.extended(
+          onPressed: () =>
+              controller.isOpen ? controller.close() : controller.open(),
+          icon: const Icon(Icons.add_rounded),
+          label: Text(t.addBookLabel),
         );
       },
       menuChildren: [
         MenuItemButton(
-          leadingIcon: const Icon(Icons.qr_code_scanner),
+          leadingIcon: const Icon(Icons.qr_code_scanner_rounded),
           onPressed: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const ScanScreen()),
           ),
           child: Text(t.scanIsbnBarcode),
         ),
         MenuItemButton(
-          leadingIcon: const Icon(Icons.pin_outlined),
+          leadingIcon: const Icon(Icons.pin_rounded),
           onPressed: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const IsbnEntryScreen()),
           ),
           child: Text(t.enterIsbnNumber),
         ),
         MenuItemButton(
-          leadingIcon: const Icon(Icons.add_a_photo_outlined),
+          leadingIcon: const Icon(Icons.add_a_photo_rounded),
           onPressed: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const ScanCoverFirstScreen()),
           ),
           child: Text(t.scanCoverFirstLabel),
         ),
         MenuItemButton(
-          leadingIcon: const Icon(Icons.edit_outlined),
+          leadingIcon: const Icon(Icons.edit_rounded),
           onPressed: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const BookEditScreen()),
           ),

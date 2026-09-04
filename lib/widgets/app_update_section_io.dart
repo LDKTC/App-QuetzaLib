@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../models/app_update_info.dart';
 import '../services/update_service.dart';
+import 'settings_section.dart';
 
 /// Native: the "check for updates / download / install" section that used
 /// to live directly in `SettingsScreen`, unchanged — just moved out so its
@@ -155,14 +156,10 @@ class _AppUpdateSectionState extends State<AppUpdateSection> {
     final t = AppLocalizations.of(context);
     final update = _availableUpdate;
     final downloaded = _downloadedApk != null;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return SettingsSection(
+      title: t.appUpdateSectionTitle,
+      icon: Icons.system_update_rounded,
       children: [
-        Text(
-          t.appUpdateSectionTitle,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: 8),
         Text(
           t.appUpdateSectionBody,
           style: Theme.of(context).textTheme.bodySmall,

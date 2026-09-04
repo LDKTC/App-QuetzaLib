@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../services/backup_service.dart';
 import '../state/library_provider.dart';
+import 'settings_section.dart';
 
 /// Settings section for exporting the whole library (books, categories,
 /// reading stamps, cover presets, saved pages, name sets, and every
@@ -122,14 +123,10 @@ class _BackupRestoreSectionState extends State<BackupRestoreSection> {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return SettingsSection(
+      title: t.backupSectionTitle,
+      icon: Icons.inventory_2_rounded,
       children: [
-        Text(
-          t.backupSectionTitle,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: 8),
         Text(
           t.backupSectionBody,
           style: Theme.of(context).textTheme.bodySmall,
