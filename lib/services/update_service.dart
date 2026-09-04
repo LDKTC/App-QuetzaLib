@@ -68,12 +68,42 @@ class UpdateService {
     );
   }
 
+  /// The local file [update]'s APK is (or would be) downloaded to.
+  Future<File> apkFileFor(AppUpdateInfo update) async {
+    final dir = Directory('${(await getTemporaryDirectory()).path}/updates');
+    return File('${dir.path}/quetzalib-${update.version}.apk');
+  }
+
+  /// The already-downloaded APK for [update], or null if it hasn't been
+  /// downloaded yet (or the cached copy is incomplete). Lets the UI offer
+  /// "install" on its own, so a failed install doesn't cost a second
+  /// download of the same file.
+  Future<File?> downloadedApk(AppUpdateInfo update) async {
+    final file = await apkFileFor(update);
+    if (!await file.exists()) return null;
+    if (update.apkSizeBytes > 0 &&
+        await file.length() != update.apkSizeBytes) {
+      // A truncated leftover from an interrupted download.
+      await file.delete();
+      return null;
+    }
+    return file;
+  }
+
   /// Downloads [update]'s APK to a private cache folder, reporting progress
   /// in `[0, 1]` via [onProgress], and returns the local file.
+  ///
+  /// The download lands in a `.part` file that is only renamed into place
+  /// once the whole APK has arrived, so an interrupted download can never
+  /// be mistaken for an installable one by [downloadedApk].
   Future<File> download(
     AppUpdateInfo update, {
     void Function(double progress)? onProgress,
   }) async {
+    final file = await apkFileFor(update);
+    await file.parent.create(recursive: true);
+    await _deleteStaleDownloads(file);
+
     final response = await _client.send(
       http.Request('GET', Uri.parse(update.downloadUrl)),
     );
@@ -82,12 +112,10 @@ class UpdateService {
     }
 
     final total = response.contentLength ?? update.apkSizeBytes;
-    final dir = Directory('${(await getTemporaryDirectory()).path}/updates');
-    await dir.create(recursive: true);
-    final file = File('${dir.path}/quetzalib-${update.version}.apk');
+    final part = File('${file.path}.part');
 
     var received = 0;
-    final sink = file.openWrite();
+    final sink = part.openWrite();
     try {
       await response.stream.map((chunk) {
         received += chunk.length;
@@ -97,7 +125,24 @@ class UpdateService {
     } finally {
       await sink.close();
     }
-    return file;
+    if (total > 0 && received != total) {
+      await part.delete();
+      throw Exception('Download ended early ($received of $total bytes).');
+    }
+    if (await file.exists()) await file.delete();
+    return part.rename(file.path);
+  }
+
+  /// Removes cached APKs (and partial downloads) for other versions, so the
+  /// update cache never holds more than the one build being installed.
+  Future<void> _deleteStaleDownloads(File keep) async {
+    await for (final entry in keep.parent.list()) {
+      if (entry is! File) continue;
+      if (entry.path == keep.path) continue;
+      if (entry.path.endsWith('.apk') || entry.path.endsWith('.apk.part')) {
+        await entry.delete();
+      }
+    }
   }
 
   /// Requests the "install unknown apps" permission if needed, then hands
