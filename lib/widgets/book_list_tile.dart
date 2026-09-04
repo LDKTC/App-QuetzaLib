@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/book.dart';
 import '../models/stamp.dart';
+import '../theme.dart';
 import 'app_image.dart';
 import 'status_chip.dart';
 
@@ -29,29 +30,89 @@ class BookListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final path = coverImagePath ?? book.thumbnailUrl;
-    final placeholder = Container(
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-      child: const Icon(Icons.menu_book_outlined),
-    );
 
-    return ListTile(
+    // The status chip stays on the trailing edge rather than stacking under
+    // the author: a library list is for scanning many books at once, so the
+    // row keeps roughly its original height instead of growing by half.
+    return InkWell(
       onTap: onTap,
       onLongPress: onLongPress,
-      leading: SizedBox(
-        width: 44,
-        height: 64,
-        child: path == null
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+        child: Row(
+          children: [
+            _Cover(path: path),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    book.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    book.authorsDisplay,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            StatusChip(currentType: currentStatus),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The row's cover thumbnail: rounded and lightly shadowed so it reads as
+/// the same object the shelf views show, with a neutral book placeholder
+/// when the book has neither a scanned cover nor an API thumbnail.
+class _Cover extends StatelessWidget {
+  const _Cover({required this.path});
+
+  final String? path;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final placeholder = ColoredBox(
+      color: colorScheme.surfaceContainerHighest,
+      child: Icon(
+        Icons.menu_book_outlined,
+        size: 20,
+        color: colorScheme.onSurfaceVariant,
+      ),
+    );
+    final imagePath = path;
+
+    return Container(
+      width: 46,
+      height: 68,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppRadius.cover),
+        boxShadow: coverShadow(context),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppRadius.cover),
+        child: imagePath == null
             ? placeholder
             : AppImage(
-                path,
+                imagePath,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) => placeholder,
               ),
       ),
-      title: Text(book.title, maxLines: 2, overflow: TextOverflow.ellipsis),
-      subtitle: Text(book.authorsDisplay, maxLines: 1, overflow: TextOverflow.ellipsis),
-      trailing: StatusChip(currentType: currentStatus),
     );
   }
 }

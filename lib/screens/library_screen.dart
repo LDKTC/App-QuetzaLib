@@ -6,6 +6,7 @@ import '../models/book.dart';
 import '../services/settings_service.dart';
 import '../state/library_grouping.dart';
 import '../state/library_provider.dart';
+import '../theme.dart';
 import '../widgets/book_list_tile.dart';
 import '../widgets/book_preview_sheet.dart';
 import '../widgets/section_header.dart';
@@ -166,6 +167,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     icon: Icons.filter_list,
                     tooltip: t.filterStatusLabel,
                     value: library.statusFilter,
+                    isActive: library.statusFilter != null,
                     onChanged: library.setStatusFilter,
                     items: [
                       DropdownMenuItem(
@@ -200,6 +202,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       icon: Icons.category_outlined,
                       tooltip: t.filterCategoryLabel,
                       value: library.categoryFilterId,
+                      isActive: library.categoryFilterId != null,
                       onChanged: library.setCategoryFilter,
                       items: [
                         DropdownMenuItem(
@@ -257,10 +260,15 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 }
 
-/// A bordered, pill-shaped dropdown ("select") button: an icon plus the
-/// current selection's label, tapping it opens the options menu — used for
-/// both the status filter and the sort-field picker so the library screen
-/// only needs one row for both instead of a full chip-per-option list.
+/// A pill-shaped dropdown ("select") button: an icon plus the current
+/// selection's label, tapping it opens the options menu — used for both the
+/// status filter and the sort-field picker so the library screen only needs
+/// one row for both instead of a full chip-per-option list.
+///
+/// When [isActive], the pill fills with the brand's secondary container
+/// instead of sitting outlined on the background — so a filter that's
+/// currently hiding books is visible at a glance rather than looking
+/// identical to one that isn't.
 class _SelectButton<T> extends StatelessWidget {
   const _SelectButton({
     required this.icon,
@@ -268,6 +276,7 @@ class _SelectButton<T> extends StatelessWidget {
     required this.value,
     required this.items,
     required this.onChanged,
+    this.isActive = false,
   });
 
   final IconData icon;
@@ -275,29 +284,53 @@ class _SelectButton<T> extends StatelessWidget {
   final T value;
   final List<DropdownMenuItem<T>> items;
   final ValueChanged<T?> onChanged;
+  final bool isActive;
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final foreground =
+        isActive ? colorScheme.onSecondaryContainer : colorScheme.onSurfaceVariant;
+
     return Tooltip(
       message: tooltip,
       child: Container(
         height: 40,
-        padding: const EdgeInsets.symmetric(horizontal: 10),
+        padding: const EdgeInsets.only(left: 12, right: 4),
         decoration: BoxDecoration(
-          border: Border.all(color: colorScheme.outlineVariant),
-          borderRadius: BorderRadius.circular(20),
+          color: isActive ? colorScheme.secondaryContainer : null,
+          border: isActive
+              ? null
+              : Border.all(color: colorScheme.outlineVariant),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 18, color: colorScheme.onSurfaceVariant),
-            const SizedBox(width: 6),
+            Icon(icon, size: 18, color: foreground),
+            const SizedBox(width: 8),
             DropdownButtonHideUnderline(
               child: DropdownButton<T>(
                 value: value,
                 isDense: true,
-                icon: const Icon(Icons.arrow_drop_down, size: 18),
+                borderRadius: BorderRadius.circular(12),
+                icon: Icon(Icons.arrow_drop_down, size: 18, color: foreground),
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: colorScheme.onSurface,
+                ),
+                selectedItemBuilder: (context) => [
+                  for (final item in items)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: DefaultTextStyle.merge(
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: foreground,
+                        ),
+                        child: item.child,
+                      ),
+                    ),
+                ],
                 items: items,
                 onChanged: onChanged,
               ),
@@ -373,7 +406,10 @@ class _BookListView extends StatelessWidget {
         final row = rows[index];
         return switch (row) {
           _HeaderRow(:final label) => SectionHeader(label: label),
-          _DividerRow() => const Divider(height: 1),
+          // Inset to line up with the title column, so the covers read as
+          // one continuous column rather than being sliced by full-width
+          // rules.
+          _DividerRow() => const Divider(height: 1, indent: 76, endIndent: 16),
           _BookRow(:final book) => BookListTile(
               book: book,
               coverImagePath:
@@ -395,23 +431,51 @@ class _BookListView extends StatelessWidget {
   }
 }
 
+/// The library with nothing in it: an illustration, the explanation, and
+/// the primary way out — the empty state is the first screen a new user
+/// sees, so it offers the scan flow rather than leaving them to find the
+/// floating action button.
 class _EmptyState extends StatelessWidget {
   const _EmptyState();
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final t = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.auto_stories, size: 64, color: Theme.of(context).colorScheme.outline),
-            const SizedBox(height: 12),
+            Container(
+              width: 104,
+              height: 104,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: theme.colorScheme.secondaryContainer,
+              ),
+              child: Icon(
+                Icons.auto_stories,
+                size: 48,
+                color: theme.colorScheme.onSecondaryContainer,
+              ),
+            ),
+            const SizedBox(height: 20),
             Text(
-              AppLocalizations.of(context).emptyLibrary,
+              t.emptyLibrary,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ScanScreen()),
+              ),
+              icon: const Icon(Icons.qr_code_scanner, size: 18),
+              label: Text(t.scanIsbnBarcode),
             ),
           ],
         ),

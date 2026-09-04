@@ -8,6 +8,7 @@ import '../models/cover_preset.dart';
 import '../models/stamp.dart';
 import '../services/image_storage_service.dart';
 import '../services/settings_service.dart';
+import '../theme.dart';
 import 'app_image.dart';
 import 'local_image_size.dart';
 import 'status_chip.dart';
@@ -45,28 +46,35 @@ class BookShelfTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final path = _imagePath;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        onLongPress: onLongPress,
-        borderRadius: BorderRadius.circular(4),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: Stack(
-            children: [
-              SizedBox.expand(
-                child: path == null
-                    ? _InfoFallback(book: book, mode: mode)
-                    : _PresetImage(path: path, book: book, mode: mode),
-              ),
-              if (currentStatus != null)
-                Positioned(
-                  top: 4,
-                  right: 4,
-                  child: _StatusBadge(type: currentStatus!),
+    final radius = BorderRadius.circular(AppRadius.cover);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: radius,
+        boxShadow: coverShadow(context),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          onLongPress: onLongPress,
+          borderRadius: radius,
+          child: ClipRRect(
+            borderRadius: radius,
+            child: Stack(
+              children: [
+                SizedBox.expand(
+                  child: path == null
+                      ? _InfoFallback(book: book, mode: mode)
+                      : _PresetImage(path: path, book: book, mode: mode),
                 ),
-            ],
+                if (currentStatus != null)
+                  Positioned(
+                    top: 6,
+                    right: 6,
+                    child: _StatusBadge(type: currentStatus!),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -83,19 +91,21 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (color, icon, label) =
-        stampVisuals(AppLocalizations.of(context), type);
     return Tooltip(
-      message: label,
+      message: stampLabel(AppLocalizations.of(context), type),
       child: Container(
-        width: 20,
-        height: 20,
+        width: 22,
+        height: 22,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.black.withValues(alpha: 0.55),
+          color: Colors.black.withValues(alpha: 0.62),
         ),
         alignment: Alignment.center,
-        child: Icon(icon, size: 13, color: color),
+        child: Icon(
+          stampIcon(type),
+          size: 13,
+          color: stampColors(context, type).onScrim,
+        ),
       ),
     );
   }
@@ -428,17 +438,22 @@ class _SpineTileState extends State<_SpineTile> {
         (size != null && size.height > 0) ? size.width / size.height : _fallbackAspect;
     final width = (widget.height * aspect).clamp(28.0, widget.height * 0.6);
 
-    return SizedBox(
+    final radius = BorderRadius.circular(AppRadius.cover);
+    return Container(
       width: width,
       height: widget.height,
+      decoration: BoxDecoration(
+        borderRadius: radius,
+        boxShadow: coverShadow(context),
+      ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: widget.onTap,
           onLongPress: widget.onLongPress,
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: radius,
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: radius,
             child: Stack(
               children: [
                 SizedBox.expand(
@@ -454,8 +469,8 @@ class _SpineTileState extends State<_SpineTile> {
                 ),
                 if (widget.currentStatus != null)
                   Positioned(
-                    top: 2,
-                    right: 2,
+                    top: 4,
+                    right: 4,
                     child: _StatusBadge(type: widget.currentStatus!),
                   ),
               ],
@@ -516,7 +531,29 @@ class _InfoFallback extends StatelessWidget {
     final color = _colorForTitle(book.title);
     final isSpine = mode == ShelfDisplayMode.spine;
     return Container(
-      color: color,
+      decoration: BoxDecoration(
+        // A cloth-bound cover catches the light unevenly, so the fallback
+        // tile is shaded rather than a flat rectangle of color — it reads
+        // as a book next to the real scanned covers instead of a swatch.
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.lerp(color, Colors.white, 0.08)!,
+            color,
+            Color.lerp(color, Colors.black, 0.22)!,
+          ],
+          stops: const [0, 0.55, 1],
+        ),
+        // The lighter inner edge stands in for the fore-edge/spine crease
+        // that gives a real book its sense of depth.
+        border: Border(
+          left: BorderSide(
+            color: Colors.white.withValues(alpha: 0.28),
+            width: isSpine ? 2 : 3,
+          ),
+        ),
+      ),
       padding: const EdgeInsets.all(6),
       alignment: Alignment.center,
       child: isSpine
@@ -530,6 +567,7 @@ class _InfoFallback extends StatelessWidget {
                   color: Colors.white,
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
+                  letterSpacing: 0.2,
                 ),
               ),
             )
@@ -542,15 +580,23 @@ class _InfoFallback extends StatelessWidget {
                   textAlign: TextAlign.center,
                   maxLines: 4,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    height: 1.25,
+                    letterSpacing: -0.1,
+                  ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
                   book.authorsDisplay,
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.white70, fontSize: 11),
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.88),
+                    fontSize: 11,
+                  ),
                 ),
               ],
             ),
@@ -561,13 +607,15 @@ class _InfoFallback extends StatelessWidget {
 /// A deterministic color per title so the same book always gets the same
 /// info-tile color, and different books are visually distinguishable.
 Color _colorForTitle(String title) {
+  // Dark enough that white title text stays above 4.5:1 even on the
+  // gradient's lightest stop (see _InfoFallback).
   const palette = [
-    Color(0xFF6750A4),
-    Color(0xFF386A20),
-    Color(0xFF8B4513),
-    Color(0xFF00696D),
-    Color(0xFF984061),
-    Color(0xFF6B5900),
+    Color(0xFF15683A), // the brand emerald, so the shelf reads on-brand
+    Color(0xFF0F6265),
+    Color(0xFF7E3E11),
+    Color(0xFF3A539B),
+    Color(0xFF8B3A59),
+    Color(0xFF5F4F00),
   ];
   if (title.isEmpty) return palette[0];
   final sum = title.codeUnits.fold<int>(0, (total, c) => total + c);
