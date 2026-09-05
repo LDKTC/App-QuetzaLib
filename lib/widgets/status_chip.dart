@@ -57,7 +57,7 @@ class StatusChip extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(8, 4, 10, 4),
       decoration: BoxDecoration(
         color: colors.container,
-        borderRadius: BorderRadius.circular(AppRadius.pill),
+        borderRadius: BorderRadius.circular(AppRadius.chip),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

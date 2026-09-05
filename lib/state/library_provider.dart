@@ -64,6 +64,7 @@ class LibraryProvider extends ChangeNotifier {
   LibraryViewMode _viewMode = LibraryViewMode.list;
   LibrarySortField _sortField = LibrarySortField.dateAdded;
   AppLocale _appLocale = AppLocale.system;
+  AppThemeMode _appThemeMode = AppThemeMode.system;
 
   String _searchQuery = '';
   LibraryStatusFilter? _statusFilter;
@@ -87,6 +88,7 @@ class LibraryProvider extends ChangeNotifier {
   ShelfDisplayMode get shelfDisplayMode => _viewMode.shelfDisplayMode;
   LibrarySortField get sortField => _sortField;
   AppLocale get appLocale => _appLocale;
+  AppThemeMode get appThemeMode => _appThemeMode;
 
   List<int> categoryIdsFor(int bookId) =>
       List.unmodifiable(_bookCategoryLinks[bookId] ?? const []);
@@ -342,6 +344,7 @@ class LibraryProvider extends ChangeNotifier {
     _viewMode = await _settings.getLibraryViewMode();
     _sortField = await _settings.getLibrarySortField();
     _appLocale = await _settings.getAppLocale();
+    _appThemeMode = await _settings.getAppThemeMode();
     _loading = false;
     notifyListeners();
   }
@@ -412,6 +415,12 @@ class LibraryProvider extends ChangeNotifier {
     _appLocale = locale;
     notifyListeners();
     await _settings.setAppLocale(locale);
+  }
+
+  Future<void> setAppThemeMode(AppThemeMode mode) async {
+    _appThemeMode = mode;
+    notifyListeners();
+    await _settings.setAppThemeMode(mode);
   }
 
   Future<Book?> findByIsbn(String isbn13) => _db.findByIsbn(isbn13);

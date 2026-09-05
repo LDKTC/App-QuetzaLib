@@ -77,7 +77,6 @@ class AppLocalizations {
   String get openSearch => _t('openSearch');
   String get closeSearch => _t('closeSearch');
   String get filterAll => _t('filterAll');
-  String get emptyLibrary => _t('emptyLibrary');
   String get noBooksYet => _t('noBooksYet');
   String get scanIsbnBarcode => _t('scanIsbnBarcode');
   String get enterIsbnNumber => _t('enterIsbnNumber');
@@ -91,6 +90,9 @@ class AppLocalizations {
   String get noSeriesGroupLabel => _t('noSeriesGroupLabel');
   String get noLanguageGenreGroupLabel => _t('noLanguageGenreGroupLabel');
   String bookCountLabel(String count) => _p('bookCountLabel', {'count': count});
+  String pagesLabel(String count) => _p('pagesLabel', {'count': count});
+  String get addBookLabel => _t('addBookLabel');
+  String get emptyLibraryHint => _t('emptyLibraryHint');
   String get expandSectionTooltip => _t('expandSectionTooltip');
   String get collapseSectionTooltip => _t('collapseSectionTooltip');
 
@@ -173,6 +175,11 @@ class AppLocalizations {
   String get cloudVisionKeyField => _t('cloudVisionKeyField');
   String get languageSectionTitle => _t('languageSectionTitle');
   String get languageSectionBody => _t('languageSectionBody');
+  String get themeSectionTitle => _t('themeSectionTitle');
+  String get themeSectionBody => _t('themeSectionBody');
+  String get themeModeSystem => _t('themeModeSystem');
+  String get themeModeLight => _t('themeModeLight');
+  String get themeModeDark => _t('themeModeDark');
   String get appUpdateSectionTitle => _t('appUpdateSectionTitle');
   String get appUpdateSectionBody => _t('appUpdateSectionBody');
   String get checkForUpdates => _t('checkForUpdates');
@@ -397,8 +404,6 @@ const _en = <String, String>{
   'openSearch': 'Search',
   'closeSearch': 'Close search',
   'filterAll': 'All',
-  'emptyLibrary':
-      'No books yet. Scan a barcode or add one manually to get started.',
   'noBooksYet': 'No books yet.',
   'scanIsbnBarcode': 'Scan ISBN barcode',
   'enterIsbnNumber': 'Enter ISBN number',
@@ -412,6 +417,9 @@ const _en = <String, String>{
   'noSeriesGroupLabel': 'No series',
   'noLanguageGenreGroupLabel': 'No language/genre',
   'bookCountLabel': '{count} books',
+  'pagesLabel': '{count} pages',
+  'addBookLabel': 'Add book',
+  'emptyLibraryHint': 'Scan a barcode or add one manually to get started.',
   'expandSectionTooltip': 'Expand section',
   'collapseSectionTooltip': 'Collapse section',
 
@@ -492,6 +500,12 @@ const _en = <String, String>{
   'languageSectionBody':
       'Choose the app\'s display language, or follow your device\'s system '
           'language.',
+  'themeSectionTitle': 'Appearance',
+  'themeSectionBody':
+      'Read in light or dark, or follow whatever your device is set to.',
+  'themeModeSystem': 'System default',
+  'themeModeLight': 'Light',
+  'themeModeDark': 'Dark',
   'appUpdateSectionTitle': 'App update',
   'appUpdateSectionBody':
       'QuetzaLib isn\'t distributed through the Play Store, so updates are '
@@ -710,7 +724,6 @@ const _th = <String, String>{
   'openSearch': 'ค้นหา',
   'closeSearch': 'ปิดการค้นหา',
   'filterAll': 'ทั้งหมด',
-  'emptyLibrary': 'ยังไม่มีหนังสือ สแกนบาร์โค้ดหรือเพิ่มด้วยตนเองเพื่อเริ่มต้น',
   'noBooksYet': 'ยังไม่มีหนังสือ',
   'scanIsbnBarcode': 'สแกนบาร์โค้ด ISBN',
   'enterIsbnNumber': 'กรอกหมายเลข ISBN',
@@ -724,6 +737,9 @@ const _th = <String, String>{
   'noSeriesGroupLabel': 'ไม่มีซีรีย์',
   'noLanguageGenreGroupLabel': 'ไม่มีภาษา/ประเภท',
   'bookCountLabel': '{count} เล่ม',
+  'pagesLabel': '{count} หน้า',
+  'addBookLabel': 'เพิ่มหนังสือ',
+  'emptyLibraryHint': 'สแกนบาร์โค้ดหรือเพิ่มด้วยตนเองเพื่อเริ่มต้น',
   'expandSectionTooltip': 'ขยายส่วน',
   'collapseSectionTooltip': 'ย่อส่วน',
 
@@ -793,6 +809,11 @@ const _th = <String, String>{
   'cloudVisionKeyField': 'คีย์ Cloud Vision API (ไม่บังคับ)',
   'languageSectionTitle': 'ภาษา',
   'languageSectionBody': 'เลือกภาษาที่แสดงในแอป หรือใช้ตามภาษาระบบของอุปกรณ์',
+  'themeSectionTitle': 'ธีมและการแสดงผล',
+  'themeSectionBody': 'เลือกอ่านแบบธีมสว่างหรือธีมมืด หรือใช้ตามการตั้งค่าของอุปกรณ์',
+  'themeModeSystem': 'ตามระบบ',
+  'themeModeLight': 'สว่าง',
+  'themeModeDark': 'มืด',
   'appUpdateSectionTitle': 'การอัปเดตแอป',
   'appUpdateSectionBody':
       'QuetzaLib ไม่ได้เผยแพร่ผ่าน Play Store การอัปเดตจึงติดตั้งด้วยวิธีเดียวกับการติดตั้งครั้งแรก '

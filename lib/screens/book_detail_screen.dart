@@ -9,6 +9,7 @@ import '../theme.dart';
 import '../widgets/app_image.dart';
 import '../widgets/book_3d_cover.dart';
 import '../widgets/full_image_viewer.dart';
+import '../widgets/meta_label.dart';
 import '../widgets/stamp_timeline.dart';
 import '../widgets/status_chip.dart';
 import 'book_edit_screen.dart';
@@ -44,7 +45,8 @@ class BookDetailScreen extends StatelessWidget {
       appBar: AppBar(
         actions: [
           IconButton(
-            icon: const Icon(Icons.edit_outlined),
+            icon: const Icon(Icons.edit_rounded),
+            tooltip: t.edit,
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => BookEditScreen(existingBook: book),
@@ -52,7 +54,8 @@ class BookDetailScreen extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.delete_outline),
+            icon: const Icon(Icons.delete_outline_rounded),
+            tooltip: t.delete,
             onPressed: () async {
               final confirmed = await showDialog<bool>(
                 context: context,
@@ -135,28 +138,12 @@ class BookDetailScreen extends StatelessWidget {
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
-                    if (book.publisher != null || book.publishedDate != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        [book.publisher, book.publishedDate]
-                            .whereType<String>()
-                            .join(' · '),
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                    if (book.genre != null || book.language != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        [book.genre, book.language]
-                            .whereType<String>()
-                            .join(' · '),
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                    if (book.isbn13 != null) ...[
-                      const SizedBox(height: 4),
-                      Text(t.isbnLabel(book.isbn13!), style: Theme.of(context).textTheme.bodySmall),
-                    ],
+                    // Publisher, year, genre, language, length and ISBN as
+                    // separate tokens instead of dot-joined lines: each fact
+                    // is findable on its own, and the block reflows on a
+                    // narrow screen instead of truncating mid-sentence.
+                    const SizedBox(height: 8),
+                    _BookFacts(book: book),
                   ],
                 ),
               ),
@@ -167,18 +154,20 @@ class BookDetailScreen extends StatelessWidget {
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => CoverPresetsScreen(book: book)),
             ),
-            icon: const Icon(Icons.camera_alt_outlined, size: 18),
+            icon: const Icon(Icons.camera_alt_rounded, size: 18),
             label: Text(activePreset == null ? t.scanCoverLabel : t.manageCoversLabel),
           ),
           _Section(
             title: t.readingStatusLabel,
+            icon: Icons.auto_stories_rounded,
             trailing: StatusChip(currentType: library.currentStampFor(bookId)?.type),
             child: StampTimeline(bookId: bookId),
           ),
           _Section(
             title: t.categoriesLabel,
+            icon: Icons.category_rounded,
             trailing: IconButton(
-              icon: const Icon(Icons.add_circle_outline),
+              icon: const Icon(Icons.add_circle_outline_rounded),
               tooltip: t.editCategoriesTooltip,
               visualDensity: VisualDensity.compact,
               onPressed: () => _pickCategories(context, bookId, categoryIds),
@@ -198,6 +187,7 @@ class BookDetailScreen extends StatelessWidget {
           ),
           _Section(
             title: t.savedPagesLabel,
+            icon: Icons.photo_library_rounded,
             trailing: pages.isEmpty
                 ? null
                 : TextButton(
@@ -211,7 +201,7 @@ class BookDetailScreen extends StatelessWidget {
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => PageScanScreen(book: book)),
                     ),
-                    icon: const Icon(Icons.add_a_photo_outlined, size: 18),
+                    icon: const Icon(Icons.add_a_photo_rounded, size: 18),
                     label: Text(t.savePageTitle),
                   )
                 : SizedBox(
@@ -232,11 +222,13 @@ class BookDetailScreen extends StatelessWidget {
           if (book.description != null)
             _Section(
               title: t.descriptionLabel,
+              icon: Icons.notes_rounded,
               child: Text(book.description!),
             ),
           if (book.notes != null)
             _Section(
               title: t.myNotesLabel,
+              icon: Icons.edit_note_rounded,
               child: Text(book.notes!),
             ),
           if (book.source != null) ...[
@@ -417,15 +409,59 @@ class _CoverArt extends StatelessWidget {
   }
 }
 
-/// One block of the detail screen — a labeled card with an optional
-/// trailing action. Every section below the header uses it, so the reading
-/// timeline, categories, saved pages, description, and notes share the same
-/// header weight, padding, and separation instead of each being a bare
-/// label followed by an ad-hoc gap.
+/// The facts under a book's title — only the ones it actually carries, so
+/// a hand-entered book doesn't render a row of empty labels.
+class _BookFacts extends StatelessWidget {
+  const _BookFacts({required this.book});
+
+  final Book book;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    final pageCount = book.pageCount;
+    return Wrap(
+      spacing: 10,
+      runSpacing: 4,
+      children: [
+        if (book.publisher != null)
+          MetaLabel(icon: Icons.apartment_rounded, label: book.publisher!),
+        if (book.publishedDate != null)
+          MetaLabel(icon: Icons.event_outlined, label: book.publishedDate!),
+        if (book.genre != null)
+          MetaLabel(icon: Icons.local_offer_outlined, label: book.genre!),
+        if (book.language != null)
+          MetaLabel(icon: Icons.translate_rounded, label: book.language!),
+        if (pageCount != null && pageCount > 0)
+          MetaLabel(
+            icon: Icons.menu_book_outlined,
+            label: t.pagesLabel(pageCount.toString()),
+          ),
+        if (book.isbn13 != null)
+          MetaLabel(
+            icon: Icons.qr_code_2_rounded,
+            label: t.isbnLabel(book.isbn13!),
+          ),
+      ],
+    );
+  }
+}
+
+/// One block of the detail screen — a card opened by an accented heading,
+/// with an optional trailing action. Every section below the header uses
+/// it, so the reading timeline, categories, saved pages, description, and
+/// notes share the same header weight, padding, and separation instead of
+/// each being a bare label followed by an ad-hoc gap.
 class _Section extends StatelessWidget {
-  const _Section({required this.title, required this.child, this.trailing});
+  const _Section({
+    required this.title,
+    required this.icon,
+    required this.child,
+    this.trailing,
+  });
 
   final String title;
+  final IconData icon;
   final Widget child;
   final Widget? trailing;
 
@@ -444,12 +480,24 @@ class _Section extends StatelessWidget {
                 height: 32,
                 child: Row(
                   children: [
+                    Container(
+                      width: 4,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Icon(icon, size: 18, color: theme.colorScheme.primary),
+                    const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         title,
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          letterSpacing: 0.4,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),

@@ -10,6 +10,7 @@ import '../state/library_grouping.dart';
 import '../state/library_provider.dart';
 import 'book_preview_sheet.dart';
 import 'book_shelf_tile.dart';
+import 'empty_state.dart';
 import 'section_header.dart';
 
 /// The "visual bookshelf" view of [LibraryProvider.filteredBooks]: each
@@ -53,7 +54,7 @@ class _ShelfGridViewState extends State<ShelfGridView> {
     final t = AppLocalizations.of(context);
 
     if (books.isEmpty) {
-      return Center(child: Text(t.noBooksYet));
+      return EmptyState(icon: Icons.auto_stories_rounded, title: t.noBooksYet);
     }
 
     void previewBook(Book book) => showBookPreview(
@@ -166,6 +167,7 @@ class _ShelfGridViewState extends State<ShelfGridView> {
             children: [
               SectionHeader(
                 label: label,
+                count: section.books.length,
                 isExpanded: isExpanded,
                 onToggleExpanded: () => _toggleExpanded(label),
               ),

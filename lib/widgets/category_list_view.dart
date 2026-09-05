@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
 import '../state/library_provider.dart';
+import 'empty_state.dart';
 
 /// The categories tab of the category manager: the list of categories plus
 /// the add/rename dialogs that maintain it. Split out of
@@ -17,50 +18,63 @@ class CategoryListView extends StatelessWidget {
     final t = AppLocalizations.of(context);
 
     if (library.categories.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Text(t.noCategoriesYet, textAlign: TextAlign.center),
-        ),
+      return EmptyState(
+        icon: Icons.category_rounded,
+        title: t.categoriesTab,
+        message: t.noCategoriesYet,
       );
     }
 
-    return ListView.separated(
+    // A card per category rather than one ruled table: the same treatment
+    // the library list gives a book, so both tabs of the manager and the
+    // library itself read as the same kind of list.
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       itemCount: library.categories.length,
-      separatorBuilder: (_, __) => const Divider(height: 1),
       itemBuilder: (context, index) {
         final category = library.categories[index];
         final count = library.categoryCounts[category.id] ?? 0;
         final colorScheme = Theme.of(context).colorScheme;
-        return ListTile(
-          // The avatar carries the category's initial rather than being a
-          // bare colored dot: it tells you which category you're looking at
-          // while scanning, and it stays on-palette in both themes.
-          leading: CircleAvatar(
-            backgroundColor: colorScheme.secondaryContainer,
-            foregroundColor: colorScheme.onSecondaryContainer,
-            child: Text(
-              _initialOf(category.name),
-              style: const TextStyle(fontWeight: FontWeight.w700),
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Card(
+            child: ListTile(
+              // The avatar carries the category's initial rather than being
+              // a bare colored dot: it tells you which category you're
+              // looking at while scanning, and it stays on-palette in both
+              // themes.
+              leading: CircleAvatar(
+                backgroundColor: colorScheme.secondaryContainer,
+                foregroundColor: colorScheme.onSecondaryContainer,
+                child: Text(
+                  _initialOf(category.name),
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+              title: Text(category.name),
+              subtitle: Text(t.bookCountLabel(count.toString())),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit_rounded),
+                    tooltip: t.renameCategoryTitle,
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () => promptRenameCategory(
+                      context,
+                      category.id!,
+                      category.name,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline_rounded),
+                    tooltip: t.delete,
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () => library.deleteCategory(category.id!),
+                  ),
+                ],
+              ),
             ),
-          ),
-          title: Text(category.name),
-          subtitle: Text(t.bookCountLabel(count.toString())),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.edit_outlined),
-                tooltip: t.renameCategoryTitle,
-                onPressed: () =>
-                    promptRenameCategory(context, category.id!, category.name),
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline),
-                tooltip: t.delete,
-                onPressed: () => library.deleteCategory(category.id!),
-              ),
-            ],
           ),
         );
       },

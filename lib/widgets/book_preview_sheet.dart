@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../models/book.dart';
 import '../models/stamp.dart';
+import '../theme.dart';
 import 'app_image.dart';
 import 'status_chip.dart';
 
@@ -63,19 +64,28 @@ class _BookPreviewSheet extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
-                  child: SizedBox(
-                    width: 72,
-                    height: 104,
-                    child: path == null
-                        ? placeholder
-                        : AppImage(
-                            path,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                placeholder,
-                          ),
+                // Same rounding and shadow as the list and shelf give a
+                // cover, so the preview reads as the tile you long-pressed
+                // rather than a different object.
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(AppRadius.cover),
+                    boxShadow: coverShadow(context),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(AppRadius.cover),
+                    child: SizedBox(
+                      width: 72,
+                      height: 104,
+                      child: path == null
+                          ? placeholder
+                          : AppImage(
+                              path,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  placeholder,
+                            ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -126,13 +136,13 @@ class _BookPreviewSheet extends StatelessWidget {
                 children: [
                   if (book.genre != null)
                     Chip(
-                      avatar: const Icon(Icons.category_outlined, size: 16),
+                      avatar: const Icon(Icons.category_rounded, size: 16),
                       label: Text(book.genre!),
                       visualDensity: VisualDensity.compact,
                     ),
                   if (book.language != null)
                     Chip(
-                      avatar: const Icon(Icons.translate, size: 16),
+                      avatar: const Icon(Icons.translate_rounded, size: 16),
                       label: Text(book.language!),
                       visualDensity: VisualDensity.compact,
                     ),
@@ -145,7 +155,7 @@ class _BookPreviewSheet extends StatelessWidget {
                 Navigator.of(context).pop();
                 onOpenDetails();
               },
-              icon: const Icon(Icons.open_in_new, size: 18),
+              icon: const Icon(Icons.open_in_new_rounded, size: 18),
               label: Text(t.viewDetailsLabel),
             ),
           ],
