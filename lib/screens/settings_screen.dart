@@ -6,6 +6,7 @@ import '../services/settings_service.dart';
 import '../state/library_provider.dart';
 import '../widgets/app_update_section.dart';
 import '../widgets/backup_restore_section.dart';
+import '../widgets/book_list_details_section.dart';
 import '../widgets/settings_section.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -105,6 +106,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ],
                 ),
+                const BookListDetailsSection(),
                 SettingsSection(
                   title: t.ocrSectionTitle,
                   icon: Icons.document_scanner_rounded,

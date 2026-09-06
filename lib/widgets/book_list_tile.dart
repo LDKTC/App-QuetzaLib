@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/book.dart';
+import '../models/book_meta_field.dart';
 import '../models/stamp.dart';
 import '../theme.dart';
 import 'app_image.dart';
@@ -24,6 +25,9 @@ class BookListTile extends StatelessWidget {
     required this.currentStatus,
     required this.onTap,
     this.onLongPress,
+    this.metaFields = BookMetaField.defaults,
+    this.metaLayout = BookMetaLayout.singleLine,
+    this.categoryNames = const [],
   });
 
   final Book book;
@@ -37,6 +41,19 @@ class BookListTile extends StatelessWidget {
 
   /// Long-pressing shows a quick preview sheet instead of navigating in.
   final VoidCallback? onLongPress;
+
+  /// Which secondary details to print under the title, and how to lay them
+  /// out — both come from the user's "Book list details" setting (see
+  /// [BookMetaField]). Defaulted rather than required so a tile built
+  /// outside the library screen, with no provider to read the setting from,
+  /// still shows what the list showed before any of this was configurable.
+  final Set<BookMetaField> metaFields;
+  final BookMetaLayout metaLayout;
+
+  /// The book's linked category names, for [BookMetaField.category]. They
+  /// live in their own table, so unlike every other detail they can't be
+  /// read off [book] and have to be passed in.
+  final List<String> categoryNames;
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +104,15 @@ class BookListTile extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall,
                     ),
-                    _MetaRow(book: book, t: t),
+                    _MetaRow(
+                      tokens: bookMetaTokens(
+                        book,
+                        fields: metaFields,
+                        t: t,
+                        categoryNames: categoryNames,
+                      ),
+                      layout: metaLayout,
+                    ),
                   ],
                 ),
               ),
@@ -101,62 +126,50 @@ class BookListTile extends StatelessWidget {
   }
 }
 
-/// The tokens under the author line — the series it belongs to, the year,
-/// and its length — each shown only when the book actually carries it, so a
-/// bare manual entry doesn't render an empty row of icons.
+/// The tokens under the author line — whichever details the user turned on
+/// in settings, and only the ones the book actually carries, so a bare
+/// manual entry doesn't render an empty row of icons.
 ///
-/// Capped at the two most identifying facts on a single ellipsized line:
-/// this is a list built for scanning many books, and letting the tokens
-/// wrap would push every row to twice the height of its cover.
+/// [BookMetaLayout.singleLine] caps the row at
+/// [BookMetaLayout.singleLineLimit] tokens on one ellipsized line, keeping
+/// every row the height of its cover — this is a list built for scanning
+/// many books at once, and letting the tokens wrap would push every row to
+/// twice that height. [BookMetaLayout.wrapped] accepts exactly that cost
+/// for a reader who'd rather see the whole record than scan quickly.
 class _MetaRow extends StatelessWidget {
-  const _MetaRow({required this.book, required this.t});
+  const _MetaRow({required this.tokens, required this.layout});
 
-  final Book book;
-  final AppLocalizations t;
+  final List<BookMetaToken> tokens;
+  final BookMetaLayout layout;
 
   @override
   Widget build(BuildContext context) {
-    final series = book.series;
-    final volume = book.seriesVolumeDisplay;
-    final year = _yearOf(book.publishedDate);
-    final pageCount = book.pageCount;
-
-    final items = <Widget>[
-      if (series != null && series.isNotEmpty)
-        MetaLabel(
-          icon: Icons.collections_bookmark_outlined,
-          label: volume == null ? series : t.seriesWithVolume(series, volume),
-        ),
-      if (year != null) MetaLabel(icon: Icons.event_outlined, label: year),
-      if (pageCount != null && pageCount > 0)
-        MetaLabel(
-          icon: Icons.menu_book_outlined,
-          label: t.pagesLabel(pageCount.toString()),
-        ),
-    ];
-    if (items.isEmpty) return const SizedBox.shrink();
+    if (tokens.isEmpty) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.only(top: 4),
-      child: Row(
-        children: [
-          for (final item in items.take(2)) ...[
-            Flexible(child: item),
-            const SizedBox(width: 10),
-          ],
-        ],
-      ),
+      child: layout == BookMetaLayout.wrapped
+          ? Wrap(
+              spacing: 10,
+              runSpacing: 2,
+              children: [
+                for (final token in tokens)
+                  MetaLabel(icon: token.icon, label: token.label),
+              ],
+            )
+          : Row(
+              children: [
+                for (final (index, token)
+                    in tokens.take(BookMetaLayout.singleLineLimit).indexed) ...[
+                  if (index > 0) const SizedBox(width: 10),
+                  Flexible(
+                    child: MetaLabel(icon: token.icon, label: token.label),
+                  ),
+                ],
+              ],
+            ),
     );
   }
-}
-
-/// The four-digit year out of a `publishedDate`, which arrives from the
-/// metadata providers in whatever shape they use (`2019`, `2019-04`,
-/// `2019-04-22`) — anything without a leading year renders nothing rather
-/// than a confusing fragment.
-String? _yearOf(String? publishedDate) {
-  final match = RegExp(r'\d{4}').firstMatch(publishedDate ?? '');
-  return match?.group(0);
 }
 
 /// The row's cover thumbnail: rounded and lightly shadowed so it reads as

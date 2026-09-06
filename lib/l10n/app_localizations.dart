@@ -91,6 +91,9 @@ class AppLocalizations {
   String get noLanguageGenreGroupLabel => _t('noLanguageGenreGroupLabel');
   String bookCountLabel(String count) => _p('bookCountLabel', {'count': count});
   String pagesLabel(String count) => _p('pagesLabel', {'count': count});
+  String volumeLabel(String volume) => _p('volumeLabel', {'volume': volume});
+  String get metaFieldYear => _t('metaFieldYear');
+  String get metaFieldIsbn => _t('metaFieldIsbn');
   String get addBookLabel => _t('addBookLabel');
   String get emptyLibraryHint => _t('emptyLibraryHint');
   String get expandSectionTooltip => _t('expandSectionTooltip');
@@ -180,6 +183,16 @@ class AppLocalizations {
   String get themeModeSystem => _t('themeModeSystem');
   String get themeModeLight => _t('themeModeLight');
   String get themeModeDark => _t('themeModeDark');
+  String get listDetailsSectionTitle => _t('listDetailsSectionTitle');
+  String get listDetailsSectionBody => _t('listDetailsSectionBody');
+  String get listDetailsLayoutLabel => _t('listDetailsLayoutLabel');
+  String get metaLayoutSingleLine => _t('metaLayoutSingleLine');
+  String get metaLayoutWrapped => _t('metaLayoutWrapped');
+  String listDetailsSingleLineHint(String count) =>
+      _p('listDetailsSingleLineHint', {'count': count});
+  String get listDetailsNoneHint => _t('listDetailsNoneHint');
+  String get listDetailsFieldsLabel => _t('listDetailsFieldsLabel');
+  String get resetToDefault => _t('resetToDefault');
   String get appUpdateSectionTitle => _t('appUpdateSectionTitle');
   String get appUpdateSectionBody => _t('appUpdateSectionBody');
   String get checkForUpdates => _t('checkForUpdates');
@@ -418,6 +431,9 @@ const _en = <String, String>{
   'noLanguageGenreGroupLabel': 'No language/genre',
   'bookCountLabel': '{count} books',
   'pagesLabel': '{count} pages',
+  'volumeLabel': 'Vol. {volume}',
+  'metaFieldYear': 'Year',
+  'metaFieldIsbn': 'ISBN',
   'addBookLabel': 'Add book',
   'emptyLibraryHint': 'Scan a barcode or add one manually to get started.',
   'expandSectionTooltip': 'Expand section',
@@ -506,6 +522,21 @@ const _en = <String, String>{
   'themeModeSystem': 'System default',
   'themeModeLight': 'Light',
   'themeModeDark': 'Dark',
+  'listDetailsSectionTitle': 'Book list details',
+  'listDetailsSectionBody':
+      'Choose which details the library list prints under each book\'s '
+          'title. A book only shows the ones it actually has, so turning a '
+          'detail on never leaves an empty slot behind.',
+  'listDetailsFieldsLabel': 'Details to show',
+  'listDetailsLayoutLabel': 'Layout',
+  'metaLayoutSingleLine': 'One line',
+  'metaLayoutWrapped': 'Wrap',
+  'listDetailsSingleLineHint':
+      'Every row stays the height of its cover, showing the first {count} '
+          'details a book has.',
+  'listDetailsNoneHint':
+      'Nothing selected — the list shows just the title and author.',
+  'resetToDefault': 'Reset to default',
   'appUpdateSectionTitle': 'App update',
   'appUpdateSectionBody':
       'QuetzaLib isn\'t distributed through the Play Store, so updates are '
@@ -738,6 +769,9 @@ const _th = <String, String>{
   'noLanguageGenreGroupLabel': 'ไม่มีภาษา/ประเภท',
   'bookCountLabel': '{count} เล่ม',
   'pagesLabel': '{count} หน้า',
+  'volumeLabel': 'เล่มที่ {volume}',
+  'metaFieldYear': 'ปีที่พิมพ์',
+  'metaFieldIsbn': 'ISBN',
   'addBookLabel': 'เพิ่มหนังสือ',
   'emptyLibraryHint': 'สแกนบาร์โค้ดหรือเพิ่มด้วยตนเองเพื่อเริ่มต้น',
   'expandSectionTooltip': 'ขยายส่วน',
@@ -814,6 +848,18 @@ const _th = <String, String>{
   'themeModeSystem': 'ตามระบบ',
   'themeModeLight': 'สว่าง',
   'themeModeDark': 'มืด',
+  'listDetailsSectionTitle': 'รายละเอียดในลิสต์หนังสือ',
+  'listDetailsSectionBody':
+      'เลือกข้อมูลที่จะแสดงใต้ชื่อหนังสือในลิสต์ห้องสมุด หนังสือแต่ละเล่มจะแสดงเฉพาะข้อมูลที่มีจริง '
+          'การเปิดข้อมูลใดไว้จึงไม่ทำให้เกิดช่องว่างเปล่า',
+  'listDetailsFieldsLabel': 'ข้อมูลที่จะแสดง',
+  'listDetailsLayoutLabel': 'การจัดวาง',
+  'metaLayoutSingleLine': 'บรรทัดเดียว',
+  'metaLayoutWrapped': 'หลายบรรทัด',
+  'listDetailsSingleLineHint':
+      'ทุกแถวจะสูงเท่ากับปกหนังสือ โดยแสดงข้อมูล {count} รายการแรกที่หนังสือมี',
+  'listDetailsNoneHint': 'ยังไม่ได้เลือกข้อมูลใด ลิสต์จะแสดงเฉพาะชื่อเรื่องและผู้แต่ง',
+  'resetToDefault': 'คืนค่าเริ่มต้น',
   'appUpdateSectionTitle': 'การอัปเดตแอป',
   'appUpdateSectionBody':
       'QuetzaLib ไม่ได้เผยแพร่ผ่าน Play Store การอัปเดตจึงติดตั้งด้วยวิธีเดียวกับการติดตั้งครั้งแรก '
