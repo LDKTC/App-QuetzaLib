@@ -150,13 +150,15 @@ List<BookMetaToken> bookMetaTokens(
     final label = switch (field) {
       // With both on, the volume folds into the series token ("Foo · Vol.
       // 3") instead of spending two of the row's slots on one fact.
+      // showSeries/showVolume promote `series`/`volume` to non-null here,
+      // so no `!` is needed (and the analyzer rejects one that is).
       BookMetaField.series => !showSeries
           ? null
           : showVolume
-              ? t.seriesWithVolume(series!, volume!)
-              : series!,
+              ? t.seriesWithVolume(series, volume)
+              : series,
       BookMetaField.volume =>
-        (showVolume && !showSeries) ? t.volumeLabel(volume!) : null,
+        (showVolume && !showSeries) ? t.volumeLabel(volume) : null,
       BookMetaField.language => _nonEmpty(book.language),
       BookMetaField.genre => _nonEmpty(book.genre),
       BookMetaField.category =>
