@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/book.dart';
+import '../models/book_meta_field.dart';
 import '../models/book_page.dart';
 import '../models/category.dart';
 import '../models/cover_preset.dart';
@@ -65,6 +66,8 @@ class LibraryProvider extends ChangeNotifier {
   LibrarySortField _sortField = LibrarySortField.dateAdded;
   AppLocale _appLocale = AppLocale.system;
   AppThemeMode _appThemeMode = AppThemeMode.system;
+  Set<BookMetaField> _bookMetaFields = BookMetaField.defaults;
+  BookMetaLayout _bookMetaLayout = BookMetaLayout.defaultLayout;
 
   String _searchQuery = '';
   LibraryStatusFilter? _statusFilter;
@@ -89,6 +92,11 @@ class LibraryProvider extends ChangeNotifier {
   LibrarySortField get sortField => _sortField;
   AppLocale get appLocale => _appLocale;
   AppThemeMode get appThemeMode => _appThemeMode;
+
+  /// Which details the library list prints under each book's title, and
+  /// whether they stay on one line or wrap onto several.
+  Set<BookMetaField> get bookMetaFields => Set.unmodifiable(_bookMetaFields);
+  BookMetaLayout get bookMetaLayout => _bookMetaLayout;
 
   List<int> categoryIdsFor(int bookId) =>
       List.unmodifiable(_bookCategoryLinks[bookId] ?? const []);
@@ -345,6 +353,8 @@ class LibraryProvider extends ChangeNotifier {
     _sortField = await _settings.getLibrarySortField();
     _appLocale = await _settings.getAppLocale();
     _appThemeMode = await _settings.getAppThemeMode();
+    _bookMetaFields = await _settings.getBookMetaFields();
+    _bookMetaLayout = await _settings.getBookMetaLayout();
     _loading = false;
     notifyListeners();
   }
@@ -421,6 +431,44 @@ class LibraryProvider extends ChangeNotifier {
     _appThemeMode = mode;
     notifyListeners();
     await _settings.setAppThemeMode(mode);
+  }
+
+  Future<void> setBookMetaFields(Set<BookMetaField> fields) async {
+    _bookMetaFields = Set.of(fields);
+    notifyListeners();
+    await _settings.setBookMetaFields(_bookMetaFields);
+  }
+
+  /// Turns one detail on or off, leaving the rest as they are — what the
+  /// settings screen's per-field chips call.
+  Future<void> toggleBookMetaField(BookMetaField field, bool enabled) {
+    final fields = Set.of(_bookMetaFields);
+    if (enabled) {
+      fields.add(field);
+    } else {
+      fields.remove(field);
+    }
+    return setBookMetaFields(fields);
+  }
+
+  /// Puts both list-detail settings back where a fresh install starts —
+  /// what the section's "Reset to default" button calls, so it covers the
+  /// layout it sits under as well as the fields above it.
+  Future<void> resetBookListDetails() async {
+    await setBookMetaFields(BookMetaField.defaults);
+    await setBookMetaLayout(BookMetaLayout.defaultLayout);
+  }
+
+  /// Whether both are already at their defaults, i.e. resetting would
+  /// change nothing.
+  bool get bookListDetailsAreDefault =>
+      setEquals(_bookMetaFields, BookMetaField.defaults) &&
+      _bookMetaLayout == BookMetaLayout.defaultLayout;
+
+  Future<void> setBookMetaLayout(BookMetaLayout layout) async {
+    _bookMetaLayout = layout;
+    notifyListeners();
+    await _settings.setBookMetaLayout(layout);
   }
 
   Future<Book?> findByIsbn(String isbn13) => _db.findByIsbn(isbn13);

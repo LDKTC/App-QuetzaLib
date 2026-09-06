@@ -432,6 +432,9 @@ class _BookListView extends StatelessWidget {
                 coverImagePath:
                     library.activeCoverPresetFor(book.id!)?.frontImagePath,
                 currentStatus: library.currentStampFor(book.id!)?.type,
+                metaFields: library.bookMetaFields,
+                metaLayout: library.bookMetaLayout,
+                categoryNames: library.categoryNamesFor(book.id!),
                 onTap: () => onTapBook(book.id!),
                 onLongPress: () => showBookPreview(
                   context,

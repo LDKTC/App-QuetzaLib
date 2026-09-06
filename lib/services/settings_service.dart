@@ -2,6 +2,7 @@ import 'package:flutter/material.dart' show Locale, ThemeMode;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../l10n/app_localizations.dart';
+import '../models/book_meta_field.dart';
 
 /// Which theme the app renders in. [system] follows the device's dark-mode
 /// setting; the other two pin the app to one brightness regardless of it —
@@ -154,8 +155,9 @@ enum LibrarySortField {
 }
 
 /// Persists user-configurable app settings: the display language and theme,
-/// the optional Cloud Vision API key used for OCR text scanning, and the
-/// library view mode.
+/// the optional Cloud Vision API key used for OCR text scanning, the
+/// library view mode, and which details the library list prints under each
+/// book's title.
 class SettingsService {
   SettingsService._internal();
   static final SettingsService instance = SettingsService._internal();
@@ -165,6 +167,8 @@ class SettingsService {
   static const _keyCloudVisionApiKey = 'cloud_vision_api_key';
   static const _keyAppLocale = 'app_locale';
   static const _keyAppThemeMode = 'app_theme_mode';
+  static const _keyBookMetaFields = 'library_list_meta_fields';
+  static const _keyBookMetaLayout = 'library_list_meta_layout';
 
   Future<AppLocale> getAppLocale() async {
     final prefs = await SharedPreferences.getInstance();
@@ -222,5 +226,31 @@ class SettingsService {
   Future<void> setLibrarySortField(LibrarySortField field) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyLibrarySortField, field.storageValue);
+  }
+
+  /// Which details the library list shows under each book's title. An
+  /// unset preference means the user has never opened the setting, and
+  /// yields [BookMetaField.defaults] rather than an empty row.
+  Future<Set<BookMetaField>> getBookMetaFields() async {
+    final prefs = await SharedPreferences.getInstance();
+    return BookMetaField.fromStorage(prefs.getString(_keyBookMetaFields));
+  }
+
+  /// Stores [fields], including when it's empty — turning every detail off
+  /// is a real choice, and must not read back as "never configured" and
+  /// silently restore the defaults on the next launch.
+  Future<void> setBookMetaFields(Set<BookMetaField> fields) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyBookMetaFields, BookMetaField.toStorage(fields));
+  }
+
+  Future<BookMetaLayout> getBookMetaLayout() async {
+    final prefs = await SharedPreferences.getInstance();
+    return BookMetaLayout.fromStorage(prefs.getString(_keyBookMetaLayout));
+  }
+
+  Future<void> setBookMetaLayout(BookMetaLayout layout) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyBookMetaLayout, layout.storageValue);
   }
 }

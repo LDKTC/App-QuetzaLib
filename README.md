@@ -43,6 +43,12 @@ library, stored locally on-device in SQLite.
 - **Shelf view**: browse the library as a visual shelf of spines or covers
   (a global List/Shelf and spine/cover toggle), falling back to a text
   info tile for books with no scanned cover yet.
+- **Custom list details**: **Settings → Book list details** decides which
+  facts the library list prints under each book's title — series, volume,
+  language, genre, category, publisher, year, page count, ISBN — and
+  whether they stay on one line (every row the height of its cover) or wrap
+  onto several. A book only shows the details it actually has, so turning
+  one on never leaves an empty slot behind.
 - **Library management**: categorize books (custom categories you define)
   and search/filter by title, author, ISBN, or reading-status stamp. Search
   covers every "Info" field — author, illustrator, series, genre, language,
@@ -104,12 +110,13 @@ library, stored locally on-device in SQLite.
 ```
 lib/
   models/            Book, BookCategory, NameAliasGroup, ReadingStamp,
-                      BookCoverPreset, BookPage, BookMetadata, AppUpdateInfo
+                      BookCoverPreset, BookPage, BookMetadata, AppUpdateInfo,
+                      BookMetaField (which details the library list shows)
   services/
     database_service.dart       sqflite schema + CRUD
     isbn_utils.dart             ISBN validation/normalization
     settings_service.dart       persisted app settings (Cloud Vision API key,
-                                 shelf display mode)
+                                 shelf display mode, book list details)
     book_metadata_service.dart  orchestrates provider lookup order
     book_lookup_service.dart    shared ISBN -> existing book/metadata/not-found resolution
     name_alias_index.dart       expands a search term into its equivalent names
